@@ -1,5 +1,5 @@
-import { Text, TextProps } from "react-native";
 import { useTheme } from "@/context/ThemeContext";
+import { Text, TextProps } from "react-native";
 
 type TextSize = "heading" | "title" | "body" | "label" | "subtext";
 
@@ -7,11 +7,13 @@ type AppTextProps = TextProps & {
   size?: TextSize;
   muted?: boolean;
   bold?: boolean;
+  primary?: boolean;
 };
 
 export function AppText({
   children,
   size = "body",
+  primary,
   muted,
   bold,
   style,
@@ -36,7 +38,7 @@ export function AppText({
         {
           fontSize: base.fontSize,
           fontWeight: bold ? "700" : base.fontWeight,
-          color: muted ? colors.textMuted : colors.text,
+          color: primary ? colors.primary : muted ? colors.textMuted : colors.text,
         },
         style,
       ]}
