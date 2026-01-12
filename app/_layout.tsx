@@ -12,8 +12,9 @@ export default function RootLayout() {
       <ThemeProvider>
         <AuthProvider>
           <Stack screenOptions={{ headerShown: false }}>
-            <Stack.Screen name="index" options={{ headerShown: false }} />
-            <Stack.Screen name="welcome" options={{ headerShown: false }} />
+            <Stack.Screen name="index" />
+            <Stack.Screen name="welcome" />
+            <Stack.Screen name="login" />
           </Stack>
           <Toast config={toastConfig} />
         </AuthProvider>

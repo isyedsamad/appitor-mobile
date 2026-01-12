@@ -5,7 +5,6 @@ import React, { createContext, useContext, useEffect, useState } from "react";
 
 type AuthContextType = {
   schoolUser: any | null;
-  setLoading: any;
   loading: boolean;
   isLoaded: boolean;
 };
@@ -17,6 +16,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isLoaded, setIsLoaded] = useState(false);
   useEffect(() => {
     const unsub = subscribeToAuthChanges(async (firebaseUser) => {
+      setLoading(true);
+      setIsLoaded(false);
       if(!firebaseUser) {
         setSchoolUser(null);
         setLoading(false);
@@ -48,15 +49,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           await logout();
           return;
         }
-        const roleSnap = await getDoc(
-          doc(db, "roles", userData.roleId)
-        );
-        if (!roleSnap.exists()) {
-          setSchoolUser(null);
-          await logout();
-          return;
+        let roleData = null;
+        if(userData.roleId != "student") {
+          const roleSnap = await getDoc(
+            doc(db, "roles", userData.roleId)
+          );
+          if (!roleSnap.exists()) {
+            setSchoolUser(null);
+            await logout();
+            return;
+          }
+          roleData = roleSnap.data();
         }
-        const roleData = roleSnap.data();
         setSchoolUser({
           ...userData,
           uid: firebaseUser.uid,
@@ -65,7 +69,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           schoolCode: schoolData.code,
           roleId: userData.roleId,
           roleName: userData.role?.toLowerCase(),
-          permissions: roleData.permissions || [],
+          permissions: roleData ? roleData.permissions || [] : [],
         });
       } catch (error) {
         console.log("Failed AuthContext: " + error);
@@ -77,7 +81,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return unsub;
   }, []);
   return (
-    <AuthContext.Provider value={{ schoolUser, setLoading, loading, isLoaded }}>
+    <AuthContext.Provider value={{ schoolUser, loading, isLoaded }}>
       {children}
     </AuthContext.Provider>
   );

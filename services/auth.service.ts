@@ -2,7 +2,8 @@ import { auth, db } from "@/lib/firebase";
 import { onAuthStateChanged, signInWithEmailAndPassword, signOut, User } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";
 
-export async function login(username: string, email: string, password: string) {
+export async function login(email: string, password: string) {
+  // return signInWithEmailAndPassword(auth, email, password);
   try {
     const fbUser = await signInWithEmailAndPassword(auth, email, password);
     const userSnap = await getDoc(doc(db, 'schoolUsers', fbUser.user.uid));

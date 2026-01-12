@@ -1,6 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
 import { Picker } from "@react-native-picker/picker";
-import { collection, getDocs } from "firebase/firestore";
 import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
@@ -21,6 +20,7 @@ import { useTheme } from "@/context/ThemeContext";
 import { db } from "@/lib/firebase";
 import { login } from "@/services/auth.service";
 import { useRouter } from "expo-router";
+import { collection, getDocs } from "firebase/firestore";
 import Toast from "react-native-toast-message";
 
 type School = {
@@ -32,45 +32,48 @@ type School = {
 export default function LoginScreen() {
   const router = useRouter();
   const { theme, colors } = useTheme();
-  const { isLoaded, setLoading, loading, schoolUser } = useAuth();
+  const { isLoaded, loading, schoolUser } = useAuth();
 
   const [schools, setSchools] = useState<School[]>([]);
   const [schoolId, setSchoolId] = useState("");
   const [schoolCode, setSchoolCode] = useState("");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [schoolLoading, setSchoolLoading] = useState("Loading.. Please wait")
+
+  // useEffect(() => {
+  //   if(schoolUser) {
+  //     if (schoolUser.roleName === "teacher") {
+  //       router.replace("./(employee)/dashboard");
+  //     } else if (schoolUser.roleName === "student") {
+  //       router.replace("./(student)/dashboard");
+  //     } else {
+  //       router.replace("/welcome");
+  //     }
+  //   }
+  // }, [schoolUser])
 
   useEffect(() => {
-    if(schoolUser) {
-      if (schoolUser.roleName === "teacher") {
-        router.replace("./(employee)/dashboard");
-      } else if (schoolUser.roleName === "student") {
-        router.replace("./(student)/dashboard");
-      } else {
-        router.replace("/welcome");
-      }
-    }
-  }, [schoolUser])
-
-  useEffect(() => {
+    let isActive = true;
     async function fetchSchools() {
       try {
-        setLoading(true);
         const snap = await getDocs(collection(db, "schools"));
-        setSchools(
-          snap.docs.map((doc) => ({
-            id: doc.id,
-            name: doc.data().name,
-            code: doc.data().code,
-          }))
-        );
+        if(isActive) {
+          setSchools(
+            snap.docs.map((doc) => ({
+              id: doc.id,
+              name: doc.data().name,
+              code: doc.data().code,
+            }))
+          );
+          setSchoolLoading("Select your School");
+        }
       } catch (e) {
         console.log("Login fetch error:", e);
-      } finally {
-        setLoading(false);
       }
     }
     fetchSchools();
+    return () => { isActive = false; };
   }, []);
 
   async function handleLogin() {
@@ -90,26 +93,24 @@ export default function LoginScreen() {
       });
       return;
     }
-    setLoading(true);
     const email = `${username.trim().toLowerCase()}@${schoolCode.toLowerCase()}.appitor`;
     try {
-      const loginInfo = await login(username.trim().toUpperCase(), email, password);
+      const loginInfo = await login(email, password);
       if(!loginInfo.success) {
         Toast.show({
           type: "error",
           text1: "Login failed",
           text2: "" + loginInfo.msg,
         });
+      }else {
+        router.replace("/");
       }
     } catch(err) {
-      setLoading(false);
       Toast.show({
         type: "error",
         text1: "Login failed",
         text2: "Failed: " + err,
       });
-    } finally {
-      setLoading(false);
     }
   }
 
@@ -158,7 +159,7 @@ export default function LoginScreen() {
                     setSchoolCode(selected?.code || "");
                   }}
                 >
-                  <Picker.Item label="Select your school" value="" />
+                  <Picker.Item label={schoolLoading} value="" />
                   {schools.map((s) => (
                     <Picker.Item
                       key={s.id}

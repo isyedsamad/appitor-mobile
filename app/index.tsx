@@ -13,15 +13,18 @@ export default function SplashScreen() {
   useEffect(() => {
     if (!isLoaded) return;
     if (!schoolUser) {
-      const timer = setTimeout(() => {
+      if (!schoolUser) {
         router.replace("/welcome");
-      }, 2000);
-      return () => clearTimeout(timer);
+      }
+      // const timer = setTimeout(() => {
+      //   router.replace("/welcome");
+      // }, 2000);
+      // return () => clearTimeout(timer);
     }
     if (schoolUser.roleName === "teacher") {
-      router.replace("./(employee)/dashboard");
+      router.replace("/(employee)/dashboard");
     } else if (schoolUser.roleName === "student") {
-      router.replace("./(student)/dashboard");
+      router.replace("/(student)/dashboard");
     } else {
       router.replace("/welcome");
     }
