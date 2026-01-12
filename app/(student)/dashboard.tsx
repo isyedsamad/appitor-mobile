@@ -18,7 +18,6 @@ export default function StudentDashboard() {
         type: "success",
         text1: "Logged out",
       });
-      // ❌ NO router.replace here
     } catch {
       Toast.show({
         type: "error",
