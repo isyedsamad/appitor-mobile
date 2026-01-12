@@ -39,9 +39,7 @@ export function Screen({ children }: { children: React.ReactNode }) {
             keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator={false}
           >
-            {/* Global loading overlay */}
             {loading && <Loading />}
-
             <View
               className="p-5"
               style={{

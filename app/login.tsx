@@ -235,7 +235,8 @@ export default function LoginScreen() {
             </View>
           </Card>
         </View>
-        <View className="absolute bottom-2 w-full items-center gap-1">
+        {/* <View className="absolute bottom-2 w-full items-center gap-1"> */}
+        <View className="w-full items-center gap-1 mt-5">
           <View className="flex-row gap-1 mb-1">
             <AppText size="subtext" muted bold>
               Developed by

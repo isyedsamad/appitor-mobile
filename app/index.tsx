@@ -13,9 +13,8 @@ export default function SplashScreen() {
   useEffect(() => {
     if (!isLoaded) return;
     if (!schoolUser) {
-      if (!schoolUser) {
-        router.replace("/welcome");
-      }
+      router.replace("/welcome");
+      return;
       // const timer = setTimeout(() => {
       //   router.replace("/welcome");
       // }, 2000);
