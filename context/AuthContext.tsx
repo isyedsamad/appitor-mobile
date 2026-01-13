@@ -49,18 +49,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           await logout();
           return;
         }
-        let roleData = null;
-        if(userData.roleId != "student") {
-          const roleSnap = await getDoc(
-            doc(db, "roles", userData.roleId)
-          );
-          if (!roleSnap.exists()) {
-            setSchoolUser(null);
-            await logout();
-            return;
-          }
-          roleData = roleSnap.data();
-        }
+        // let roleData = null;
+        // if(userData.roleId != "student") {
+        //   const roleSnap = await getDoc(
+        //     doc(db, "roles", userData.roleId)
+        //   );
+        //   if (!roleSnap.exists()) {
+        //     setSchoolUser(null);
+        //     await logout();
+        //     return;
+        //   }
+        //   roleData = roleSnap.data();
+        // }
         setSchoolUser({
           ...userData,
           uid: firebaseUser.uid,
@@ -69,7 +69,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           schoolCode: schoolData.code,
           roleId: userData.roleId,
           roleName: userData.role?.toLowerCase(),
-          permissions: roleData ? roleData.permissions || [] : [],
+          // permissions: roleData ? roleData.permissions || [] : [],
         });
       } catch (error) {
         console.log("Failed AuthContext: " + error);

@@ -26,7 +26,7 @@ export function Screen({ children }: { children: React.ReactNode }) {
 
   return (
     <>
-      <StatusBar style="light" backgroundColor={colors.bg} />
+      <StatusBar style={theme == "light" ? "dark" : "light"} backgroundColor={colors.primarySoft} />
       <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }}>
         <KeyboardAvoidingView
           style={{ flex: 1 }}
@@ -41,7 +41,6 @@ export function Screen({ children }: { children: React.ReactNode }) {
           >
             {loading && <Loading />}
             <View
-              className="p-5"
               style={{
                 flexGrow: 1,
                 backgroundColor: colors.bg,

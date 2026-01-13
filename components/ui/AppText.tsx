@@ -1,12 +1,13 @@
 import { useTheme } from "@/context/ThemeContext";
 import { Text, TextProps } from "react-native";
 
-type TextSize = "heading" | "title" | "body" | "label" | "subtext";
+type TextSize = "heading" | "title" | "body" | "label" | "subtext" | "min";
 
 type AppTextProps = TextProps & {
   size?: TextSize;
   muted?: boolean;
   bold?: boolean;
+  semibold?: boolean;
   primary?: boolean;
 };
 
@@ -16,6 +17,7 @@ export function AppText({
   primary,
   muted,
   bold,
+  semibold,
   style,
   ...props
 }: AppTextProps) {
@@ -27,6 +29,7 @@ export function AppText({
     body: { fontSize: 15, fontWeight: "400" },
     label: { fontSize: 13, fontWeight: "500" },
     subtext: { fontSize: 12, fontWeight: "400" },
+    min: { fontSize: 11, fontWeight: 400 }
   };
 
   const base = fontMap[size];
@@ -37,7 +40,7 @@ export function AppText({
       style={[
         {
           fontSize: base.fontSize,
-          fontWeight: bold ? "700" : base.fontWeight,
+          fontWeight: bold ? "700" : semibold ? "500" : base.fontWeight,
           color: primary ? colors.primary : muted ? colors.textMuted : colors.text,
         },
         style,
