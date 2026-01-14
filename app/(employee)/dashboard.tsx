@@ -9,7 +9,7 @@ import { useTheme } from "@/context/ThemeContext";
 import { db } from "@/lib/firebase";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
-import { collection, getDocs, query, where } from "firebase/firestore";
+import { doc, getDoc } from "firebase/firestore";
 import type { LucideIcon } from "lucide-react-native";
 import {
   AlarmClock,
@@ -60,67 +60,81 @@ export default function EmployeeDashboard() {
   useEffect(() => {
     if (!schoolUser) return;
     const loadAttendance = async () => {
-      const today = new Date();
-      const dateStr = `${String(today.getDate()).padStart(2, "0")}-${String(
-        today.getMonth() + 1
-      ).padStart(2, "0")}-${today.getFullYear()}`;
-      const ref = collection(
-        db,
-        "schools",
-        schoolUser.schoolId,
-        "branches",
-        schoolUser.currentBranch,
-        "attendance_date"
-      );
-      const q = query(
-        ref,
-        where("uid", "==", schoolUser.uid),
-        where("date", "==", dateStr)
-      );
-      const snap = await getDocs(q);
-      setAttendance(snap.empty ? null : snap.docs[0].data());
-      setLoading(false);
+      try {
+        const today = new Date();
+        const dateStr = `${String(today.getDate()).padStart(2, "0")}-${String(
+          today.getMonth() + 1
+        ).padStart(2, "0")}-${today.getFullYear()}`;
+        const docId = `employee_${dateStr}`;
+        const docRef = doc(
+          db,
+          "schools",
+          schoolUser.schoolId,
+          "branches",
+          schoolUser.currentBranch,
+          "attendance",
+          docId
+        );
+        const snap = await getDoc(docRef);
+        if (!snap.exists()) {
+          setAttendance(null);
+        } else {
+          const data: any = snap.data();
+          const status = data.records?.[schoolUser.uid] ?? null;
+          setAttendance({
+            date: data.date,
+            status,
+            locked: data.locked,
+          });
+        }
+      } catch (error) {
+        console.error("Error loading attendance:", error);
+        setAttendance(null);
+      } finally {
+        setLoading(false);
+      }
     };
     loadAttendance();
   }, [schoolUser]);
-  const statusKey = attendance?.status ?? "m";
+  
+  const statusKey = attendance?.status ?? "M";
   const statusMap: any = {
-    p: {
+    P: {
       label: "Present",
       bg: colors.statusPbg,
       text: colors.statusPtext,
       border: colors.statusPborder,
       note: "You were marked present today",
     },
-    a: {
+    A: {
       label: "Absent",
       bg: colors.statusAbg,
       text: colors.statusAtext,
       border: colors.statusAborder,
       note: "You were marked absent today",
     },
-    l: {
+    L: {
       label: "On Leave",
       bg: colors.statusLbg,
       text: colors.statusLtext,
       border: colors.statusLborder,
       note: "Approved leave for today",
     },
-    h: {
+    H: {
       label: "Half Day",
       bg: colors.statusHbg,
       text: colors.statusHtext,
       border: colors.statusHborder,
       note: "Half day attendance recorded",
     },
-    o: {
+    O: {
       label: "Over Time",
       bg: colors.statusObg,
       text: colors.statusOtext,
       border: colors.statusOborder,
       note: "Overtime recorded for today",
     },
-    m: {
+    M: {
       label: "Not Marked",
       bg: colors.warningSoft,
       text: colors.warning,
@@ -130,7 +144,6 @@ export default function EmployeeDashboard() {
   };
 
   const status = statusMap[statusKey];
-
   const today = new Date();
   const dateLabel = today.toLocaleDateString("en-IN", {
     weekday: "long",

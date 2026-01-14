@@ -1,5 +1,5 @@
-import { Pressable, Text } from "react-native";
 import { useTheme } from "@/context/ThemeContext";
+import { Pressable, Text } from "react-native";
 
 type ButtonVariant = "primary" | "outline";
 

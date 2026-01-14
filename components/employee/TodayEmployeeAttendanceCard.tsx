@@ -6,48 +6,48 @@ export function TodayEmployeeAttendanceCard({
   statusKey,
   dateLabel,
 }: {
-  statusKey: "p" | "a" | "l" | "h" | "o" | "m";
+  statusKey: "P" | "A" | "L" | "H" | "O" | "M";
   dateLabel: string;
 }) {
   const { colors } = useTheme();
 
   const statusMap: any = {
-    p: {
+    P: {
       label: "Present",
       bg: colors.statusPbg,
       text: colors.statusPtext,
       border: colors.statusPborder,
       note: "Marked present by management",
     },
-    a: {
+    A: {
       label: "Absent",
       bg: colors.statusAbg,
       text: colors.statusAtext,
       border: colors.statusAborder,
       note: "Marked absent by management",
     },
-    l: {
+    L: {
       label: "On Leave",
       bg: colors.statusLbg,
       text: colors.statusLtext,
       border: colors.statusLborder,
       note: "Approved leave for today",
     },
-    h: {
+    H: {
       label: "Half Day",
       bg: colors.statusHbg,
       text: colors.statusHtext,
       border: colors.statusHborder,
       note: "Half day attendance recorded",
     },
-    o: {
+    O: {
       label: "Over Time",
       bg: colors.statusObg,
       text: colors.statusOtext,
       border: colors.statusOborder,
       note: "Overtime recorded for today",
     },
-    m: {
+    M: {
       label: "Not Marked",
       bg: colors.warningSoft,
       text: colors.warning,
@@ -96,7 +96,7 @@ export function TodayEmployeeAttendanceCard({
         />
         <View className="gap-2">
           <InfoRow label="Status" value={status.label} />
-          <InfoRow label="Marked By" value={statusKey != 'm' ? "Management" : '-'} />
+          <InfoRow label="Marked By" value={statusKey != 'M' ? "Management" : '-'} />
           <InfoRow label="Remark" value={status.note} />
         </View>
       </View>

@@ -7,13 +7,24 @@ type AuthContextType = {
   schoolUser: any | null;
   loading: boolean;
   isLoaded: boolean;
+  classData: any | null;
 };
 
 const AuthContext = createContext<AuthContextType | null>(null);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [schoolUser, setSchoolUser] = useState(null as any);
+  const [classData, setClassData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isLoaded, setIsLoaded] = useState(false);
+  const loadClasses = async (schoolId: any, branch: any) => {
+    if(!branch) return;
+    setLoading(true);
+    const classSnap = await getDoc(doc(db, 'schools', schoolId, 'branches', branch, 'classes', 'data'));
+    if(!classSnap.exists()) return; 
+    const classdata = classSnap.data();
+    setClassData(classdata.classData);
+    setLoading(false);
+  }
   useEffect(() => {
     const unsub = subscribeToAuthChanges(async (firebaseUser) => {
       setLoading(true);
@@ -61,6 +72,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         //   }
         //   roleData = roleSnap.data();
         // }
+        await loadClasses(userData.schoolId, userData.currentBranch);
         setSchoolUser({
           ...userData,
           uid: firebaseUser.uid,
@@ -81,7 +93,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return unsub;
   }, []);
   return (
-    <AuthContext.Provider value={{ schoolUser, loading, isLoaded }}>
+    <AuthContext.Provider value={{ schoolUser, loading, isLoaded, classData }}>
       {children}
     </AuthContext.Provider>
   );
