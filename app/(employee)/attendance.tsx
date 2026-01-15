@@ -15,7 +15,7 @@ import {
   query,
   where,
 } from "firebase/firestore";
-import { CheckCircle, Search, ShieldCheck, Users, XCircle } from "lucide-react-native";
+import { CheckCircle, ChevronRightCircle, Search, ShieldCheck, Users, XCircle } from "lucide-react-native";
 import { useMemo, useState } from "react";
 import { FlatList, Modal, TextInput, TouchableOpacity, View } from "react-native";
 import Toast from "react-native-toast-message";
@@ -205,7 +205,7 @@ export default function StudentAttendancePage() {
               className="px-4 py-3 rounded-xl border flex-row justify-between items-center"
               style={{ backgroundColor: colors.bgCard, borderColor: colors.border }}
             >
-              <AppText semibold>
+              <AppText>
                 {selectedClass ? selectedClass.name : "Select Class"}
               </AppText>
               <AppText muted>▼</AppText>
@@ -220,7 +220,7 @@ export default function StudentAttendancePage() {
                   className="px-4 py-3 rounded-xl border flex-row justify-between items-center"
                   style={{ backgroundColor: colors.bgCard, borderColor: colors.border }}
                 >
-                  <AppText semibold>
+                  <AppText>
                     {selectedSection?.name ?? "Select Section"}
                   </AppText>
                   <AppText muted>▼</AppText>
@@ -240,24 +240,28 @@ export default function StudentAttendancePage() {
             </TouchableOpacity>
           </View>
 
-          <Modal visible={showClassPicker} animationType="slide" transparent>
+          <Modal visible={showClassPicker} animationType="slide" transparent statusBarTranslucent
+            onRequestClose={() => setShowClassPicker(false)}>
             <View className="flex-1 justify-end bg-black/30">
               <View
                 className="rounded-t-3xl py-7 px-8"
                 style={{ backgroundColor: colors.bgCard }}
               >
-                <AppText size="title" semibold>Select Class</AppText>
+                <View className="flex-row items-center gap-2">
+                  <ChevronRightCircle size={20} color={colors.text} />
+                  <AppText size="title" semibold>Select Class</AppText>
+                </View>
                 <TextInput
                   placeholder="Search class..."
                   placeholderTextColor={colors.textMuted}
-                  className="mt-2 px-4 py-3 rounded-xl border"
+                  className="mt-3 px-5 py-3 rounded-xl border"
                   style={{ borderColor: colors.border, color: colors.text }}
                   onChangeText={setClassSearch}
                 />
                 <FlatList
                   data={filteredClasses}
                   keyExtractor={item => item.id}
-                  className="mt-4 px-3"
+                  className="mt-4 px-5"
                   keyboardShouldPersistTaps="handled"
                   renderItem={({ item }) => (
                     <TouchableOpacity
@@ -271,7 +275,7 @@ export default function StudentAttendancePage() {
                       className="py-4 border-b"
                       style={{ borderColor: colors.border }}
                     >
-                      <AppText bold>{item.name}</AppText>
+                      <AppText semibold>{item.name}</AppText>
                     </TouchableOpacity>
                   )}
                 />
@@ -279,13 +283,17 @@ export default function StudentAttendancePage() {
             </View>
           </Modal>
 
-          <Modal visible={showSectionPicker} animationType="slide" transparent>
+          <Modal visible={showSectionPicker} animationType="slide" transparent statusBarTranslucent
+            onRequestClose={() => setShowSectionPicker(false)}>
             <View className="flex-1 justify-end bg-black/30">
               <View
                 className="rounded-t-3xl py-7 px-8"
                 style={{ backgroundColor: colors.bgCard }}
               >
-                <AppText size="title" semibold>Select Section</AppText>
+                <View className="flex-row items-center gap-2">
+                  <ChevronRightCircle size={20} color={colors.text} />
+                  <AppText size="title" semibold>Select Section</AppText>
+                </View>
                 <FlatList
                   data={selectedClass && selectedClass.sections}
                   keyExtractor={sec => sec.id}
@@ -299,7 +307,7 @@ export default function StudentAttendancePage() {
                       className="py-4 border-b"
                       style={{ borderColor: colors.border }}
                     >
-                      <AppText bold>{item.name}</AppText>
+                      <AppText semibold>{item.name}</AppText>
                     </TouchableOpacity>
                   )}
                 />
