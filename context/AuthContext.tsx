@@ -8,12 +8,14 @@ type AuthContextType = {
   loading: boolean;
   isLoaded: boolean;
   classData: any | null;
+  subjectData: any | null;
 };
 
 const AuthContext = createContext<AuthContextType | null>(null);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [schoolUser, setSchoolUser] = useState(null as any);
   const [classData, setClassData] = useState(null);
+  const [subjectData, setSubjectData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isLoaded, setIsLoaded] = useState(false);
   const loadClasses = async (schoolId: any, branch: any) => {
@@ -23,6 +25,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if(!classSnap.exists()) return; 
     const classdata = classSnap.data();
     setClassData(classdata.classData);
+    setLoading(false);
+  }
+  const loadSubjects = async (schoolId: any, branch: any) => {
+    if(!branch) return;
+    setLoading(true);
+    const subSnap = await getDoc(doc(db, 'schools', schoolId, 'branches', branch, 'subjects', 'branch_subjects'));
+    if(!subSnap.exists()) return; 
+    const subdata = subSnap.data();
+    setSubjectData(subdata.subjects);
     setLoading(false);
   }
   useEffect(() => {
@@ -60,19 +71,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           await logout();
           return;
         }
-        // let roleData = null;
-        // if(userData.roleId != "student") {
-        //   const roleSnap = await getDoc(
-        //     doc(db, "roles", userData.roleId)
-        //   );
-        //   if (!roleSnap.exists()) {
-        //     setSchoolUser(null);
-        //     await logout();
-        //     return;
-        //   }
-        //   roleData = roleSnap.data();
-        // }
+        let roleData = null;
+        if(userData.roleId != "student") {
+          const roleSnap = await getDoc(
+            doc(db, "roles", userData.roleId)
+          );
+          if (!roleSnap.exists()) {
+            setSchoolUser(null);
+            await logout();
+            return;
+          }
+          roleData = roleSnap.data();
+        }
         await loadClasses(userData.schoolId, userData.currentBranch);
+        await loadSubjects(userData.schoolId, userData.currentBranch);
         setSchoolUser({
           ...userData,
           uid: firebaseUser.uid,
@@ -81,7 +93,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           schoolCode: schoolData.code,
           roleId: userData.roleId,
           roleName: userData.role?.toLowerCase(),
-          // permissions: roleData ? roleData.permissions || [] : [],
+          permissions: roleData ? roleData.permissions || [] : [],
         });
       } catch (error) {
         console.log("Failed AuthContext: " + error);
@@ -93,7 +105,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return unsub;
   }, []);
   return (
-    <AuthContext.Provider value={{ schoolUser, loading, isLoaded, classData }}>
+    <AuthContext.Provider value={{ schoolUser, loading, isLoaded, classData, subjectData }}>
       {children}
     </AuthContext.Provider>
   );

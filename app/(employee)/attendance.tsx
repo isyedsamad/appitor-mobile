@@ -286,7 +286,6 @@ export default function StudentAttendancePage() {
                 style={{ backgroundColor: colors.bgCard }}
               >
                 <AppText size="title" semibold>Select Section</AppText>
-
                 <FlatList
                   data={selectedClass && selectedClass.sections}
                   keyExtractor={sec => sec.id}
@@ -543,7 +542,7 @@ export default function StudentAttendancePage() {
             <TouchableOpacity
               disabled={isMarked}
               onPress={saveAttendance}
-              className="py-4 rounded-xl flex-row justify-center gap-2 items-center mx-2 mt-1"
+              className="py-4 rounded-xl flex-row justify-center gap-2 items-center mx-2 mt-1 mb-5"
               style={{
                 backgroundColor: isMarked
                   ? colors.border

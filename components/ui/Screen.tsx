@@ -12,7 +12,12 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import Loading from "./Loading";
 
-export function Screen({ children }: { children: React.ReactNode }) {
+type ScreenProps = {
+  children: React.ReactNode;
+  scroll?: boolean;
+};
+
+export function Screen({ children, scroll = true }: ScreenProps) {
   const { theme, colors } = useTheme();
   const { loading } = useAuth();
   useEffect(() => {
@@ -23,32 +28,39 @@ export function Screen({ children }: { children: React.ReactNode }) {
       );
     }
   }, [colors.bg, theme]);
+  const Content = (
+    <>
+      {loading && <Loading />}
+      <View style={{ flex: 1, backgroundColor: colors.bg }}>
+        {children}
+      </View>
+    </>
+  );
 
   return (
     <>
-      <StatusBar style={theme == "light" ? "dark" : "light"} backgroundColor={colors.primarySoft} />
+      <StatusBar
+        style={theme == "light" ? "dark" : "light"}
+        backgroundColor={colors.primarySoft}
+      />
       <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }}>
         <KeyboardAvoidingView
           style={{ flex: 1 }}
           behavior={Platform.OS === "ios" ? "padding" : "height"}
-          keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
         >
-          <ScrollView
-            style={{ flex: 1 }}
-            contentContainerStyle={{ paddingBottom: 40 }}
-            keyboardShouldPersistTaps="handled"
-            showsVerticalScrollIndicator={false}
-          >
-            {loading && <Loading />}
-            <View
-              style={{
-                flexGrow: 1,
-                backgroundColor: colors.bg,
-              }}
+          {scroll ? (
+            <ScrollView
+              style={{ flex: 1 }}
+              contentContainerStyle={{ flexGrow: 1, paddingBottom: 0 }}
+              keyboardShouldPersistTaps="handled"
+              keyboardDismissMode="on-drag"
+              showsVerticalScrollIndicator={false}
             >
-              {children}
-            </View>
-          </ScrollView>
+              {Content}
+            </ScrollView>
+          ) : (
+            Content
+          )}
         </KeyboardAvoidingView>
       </SafeAreaView>
     </>

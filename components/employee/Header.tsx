@@ -45,8 +45,6 @@ export function Header({ title, rightSlot }: HeaderProps) {
           )}
         </View>
       </LinearGradient>
-
-      {/* Divider */}
       <View
         style={{
           height: 1.5,
