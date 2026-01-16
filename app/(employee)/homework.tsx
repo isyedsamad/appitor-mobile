@@ -137,7 +137,7 @@ export default function EmployeeHomeworkPage() {
   }, []);
 
   useEffect(() => {
-    if (!openAdd || !timetableActive) return;
+    if (!openAdd || !timetableActive || timetableSlots.length > 0) return;
     async function loadTeacherSlots() {
       setLoading(true);
       try {
@@ -157,7 +157,7 @@ export default function EmployeeHomeworkPage() {
           setTimetableSlots([]);
           return;
         }
-        const today = DAYS_MAP[new Date().getDay()];
+        const today = DAYS_MAP[new Date().getDay() - 1];
         const slots = (snap.data().slots || []).filter(
           (s: any) => s.day === today
         );
@@ -502,6 +502,7 @@ export default function EmployeeHomeworkPage() {
           ) : (
             <FlatList
               data={homework}
+              scrollEnabled={false}
               keyExtractor={(_, i) => String(i)}
               contentContainerStyle={{ gap: 12, flexGrow: 1 }}
               style={{ flex: 1, marginBottom: 20 }}

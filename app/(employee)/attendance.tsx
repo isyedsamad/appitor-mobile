@@ -7,13 +7,8 @@ import { useTheme } from "@/context/ThemeContext";
 import { db } from "@/lib/firebase";
 import secureAxios from "@/lib/secureAxios";
 import {
-  collection,
   doc,
-  getDoc,
-  getDocs,
-  orderBy,
-  query,
-  where,
+  getDoc
 } from "firebase/firestore";
 import { CheckCircle, ChevronRightCircle, Search, ShieldCheck, Users, XCircle } from "lucide-react-native";
 import { useMemo, useState } from "react";
@@ -79,35 +74,31 @@ export default function StudentAttendancePage() {
 
       const docId = `student_${dateStr}_${classId}_${sectionId}`;
       setAttendanceDocId(docId);
-      const ref = collection(
+      const rosterRef = doc(
         db,
         "schools",
         schoolUser.schoolId,
         "branches",
         schoolUser.currentBranch,
-        "students"
+        "meta",
+        `${classId}_${sectionId}`
       );
-      const q = query(
-        ref,
-        where("status", "==", "active"),
-        where("className", "==", classId),
-        where("section", "==", sectionId),
-        where("rollNo", "!=", null),
-        orderBy("rollNo", 'asc')
-      );
-      const snap = await getDocs(q);
-      if(snap.docs.length == 0) {
-        Toast.show({
-          type: 'error',
-          text1: 'No Student Found!'
-        })
+      const snapMeta = await getDoc(rosterRef);
+      if (!snapMeta.exists()) {
+        setStudents([]);
         return;
       }
-      const list = snap.docs.map(d => ({
-        uid: d.id,
-        ...d.data(),
-      }));
-      setStudents(list);
+      const data = snapMeta.data();
+      const students = (data.students || [])
+        .map((s: any) => ({
+          ...s,
+          classId,
+          sectionId,
+        }))
+        .sort((a: any, b: any) =>
+          String(a.appId).localeCompare(String(b.appId))
+        );
+      setStudents(students);
       const attSnap = await getDoc(
         doc(
           db,
@@ -192,7 +183,7 @@ export default function StudentAttendancePage() {
       {(loadingData || saving) && <Loading />}
       <Screen>
         <Header title="Attendance" />
-        <View className="px-5 mt-7 gap-4">
+        <View className="px-5 mt-6 gap-4">
           <View
             className="px-3 gap-1"
           >
@@ -315,7 +306,7 @@ export default function StudentAttendancePage() {
             </View>
           </Modal>
 
-          <View className="my-2" style={{ height: 1, backgroundColor: colors.border }} />
+          <View className="my-1" style={{ height: 1, backgroundColor: colors.border }} />
 
           {students.length === 0 && (
             <View
@@ -471,7 +462,7 @@ export default function StudentAttendancePage() {
           )}
 
           {students.length > 0 && (
-            <View className="my-2" style={{ height: 1, backgroundColor: colors.border }} />
+            <View className="my-1" style={{ height: 1, backgroundColor: colors.border }} />
           )}
 
           <View className="gap-2">
@@ -494,11 +485,11 @@ export default function StudentAttendancePage() {
                   </AppText>
                 </View>
                 <View className="flex-1">
-                  <AppText size="body" bold>
+                  <AppText size="body" bold className="capitalize">
                     {s.name}
                   </AppText>
                   <AppText size="subtext" semibold muted>
-                    Roll No · {s.rollNo?.toString().padStart(2, '0') ?? "--"}
+                    App ID: {s.appId ?? "--"}
                   </AppText>
                 </View>
               </View>

@@ -51,7 +51,7 @@ export function Screen({ children, scroll = true }: ScreenProps) {
           {scroll ? (
             <ScrollView
               style={{ flex: 1 }}
-              contentContainerStyle={{ flexGrow: 1, paddingBottom: 0 }}
+              contentContainerStyle={{ flexGrow: 1, paddingBottom: 10 }}
               keyboardShouldPersistTaps="handled"
               keyboardDismissMode="on-drag"
               showsVerticalScrollIndicator={false}

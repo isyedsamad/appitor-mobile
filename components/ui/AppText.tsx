@@ -9,12 +9,14 @@ type AppTextProps = TextProps & {
   bold?: boolean;
   semibold?: boolean;
   primary?: boolean;
+  alwaysWhite?: boolean
 };
 
 export function AppText({
   children,
   size = "body",
   primary,
+  alwaysWhite,
   muted,
   bold,
   semibold,
@@ -42,7 +44,7 @@ export function AppText({
         {
           fontSize: base.fontSize,
           fontWeight: bold ? "700" : semibold ? "500" : base.fontWeight,
-          color: primary ? colors.primary : muted ? colors.textMuted : colors.text,
+          color: primary ? colors.primary : muted ? colors.textMuted : alwaysWhite ? '#fff' : colors.text,
         },
         style,
       ]}

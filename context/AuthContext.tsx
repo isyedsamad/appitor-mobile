@@ -9,6 +9,7 @@ type AuthContextType = {
   isLoaded: boolean;
   classData: any | null;
   subjectData: any | null;
+  employeeData: any | [],
 };
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -16,6 +17,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [schoolUser, setSchoolUser] = useState(null as any);
   const [classData, setClassData] = useState(null);
   const [subjectData, setSubjectData] = useState(null);
+  const [employeeData, setEmployeeData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isLoaded, setIsLoaded] = useState(false);
   const loadClasses = async (schoolId: any, branch: any) => {
@@ -35,6 +37,35 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const subdata = subSnap.data();
     setSubjectData(subdata.subjects);
     setLoading(false);
+  }
+  const loadEmployee = async (schoolId: any, branch: any) => {
+    if (!branch) return;
+    setLoading(true);
+    try {
+      const metaRef = doc(
+        db,
+        "schools",
+        schoolId,
+        "branches",
+        branch,
+        "meta",
+        "employees"
+      );
+      const snap = await getDoc(metaRef);
+      if (!snap.exists()) {
+        setEmployeeData([]);
+        return;
+      }
+      const employees = snap.data().employees || [];
+      employees.sort((a: any, b: any) =>
+        String(a.employeeId).localeCompare(String(b.employeeId))
+      );
+      setEmployeeData(employees);
+    } catch (err) {
+      console.error("LOAD EMPLOYEE META ERROR:", err);
+    } finally {
+      setLoading(false);
+    }
   }
   useEffect(() => {
     const unsub = subscribeToAuthChanges(async (firebaseUser) => {
@@ -85,6 +116,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
         await loadClasses(userData.schoolId, userData.currentBranch);
         await loadSubjects(userData.schoolId, userData.currentBranch);
+        await loadEmployee(userData.schoolId, userData.currentBranch);
         setSchoolUser({
           ...userData,
           uid: firebaseUser.uid,
@@ -105,7 +137,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return unsub;
   }, []);
   return (
-    <AuthContext.Provider value={{ schoolUser, loading, isLoaded, classData, subjectData }}>
+    <AuthContext.Provider value={{ schoolUser, loading, isLoaded, classData, subjectData, employeeData }}>
       {children}
     </AuthContext.Provider>
   );
