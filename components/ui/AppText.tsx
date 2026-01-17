@@ -1,7 +1,7 @@
 import { useTheme } from "@/context/ThemeContext";
 import { Text, TextProps } from "react-native";
 
-type TextSize = "heading" | "headtitle" | "title" | "body" | "label" | "subtext" | "min";
+type TextSize = "heading" | "headtitle" | "title" | "body" | "label" | "subtext" | "min" | "vmin";
 
 type AppTextProps = TextProps & {
   size?: TextSize;
@@ -32,7 +32,8 @@ export function AppText({
     body: { fontSize: 15, fontWeight: "400" },
     label: { fontSize: 13, fontWeight: "500" },
     subtext: { fontSize: 12, fontWeight: "400" },
-    min: { fontSize: 11, fontWeight: 400 }
+    min: { fontSize: 11, fontWeight: "400" },
+    vmin: { fontSize: 9, fontWeight: "400" }
   };
 
   const base = fontMap[size];
