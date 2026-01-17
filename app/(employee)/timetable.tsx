@@ -451,15 +451,15 @@ function PickerModal({ visible, onClose, title, data, onSelect }: any) {
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={() => onClose()}>
       <View className="flex-1 justify-end bg-black/60">
-        <View className="rounded-t-3xl px-6 py-6 max-h-[70vh]"
+        <View className="rounded-t-3xl p-7 max-h-[70vh]"
           style={{ backgroundColor: colors.bgCard }}>
             <View className="flex-row items-center gap-2">
-              <ChevronRightCircle size={18} />
+              <ChevronRightCircle size={18} color={colors.primary} />
               <AppText size="title" semibold>{title}</AppText>
             </View>
             <FlatList
               data={data}
-              className="mt-5"
+              className="mt-3"
               keyExtractor={(i: any) => i.id}
               renderItem={({ item }) => (
                 <TouchableOpacity
@@ -467,7 +467,7 @@ function PickerModal({ visible, onClose, title, data, onSelect }: any) {
                     onSelect(item);
                     onClose();
                   }}
-                  className="p-4 border-b"
+                  className="py-4 px-5 border-b"
                   style={{ borderColor: colors.border }}>
                   <AppText semibold>{item.name}</AppText>
                 </TouchableOpacity>

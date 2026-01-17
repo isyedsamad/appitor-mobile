@@ -203,22 +203,21 @@ export default function StudentAttendancePage() {
               <AppText muted>▼</AppText>
             </TouchableOpacity>
             </View>
-            {selectedClass && (
               <View className="flex-1">
-                <AppText semibold muted size="label">Section</AppText>
-                <TouchableOpacity
-                  onPress={() => setShowSectionPicker(true)}
-                  activeOpacity={0.85}
-                  className="px-4 py-3 rounded-xl border flex-row justify-between items-center"
-                  style={{ backgroundColor: colors.bgCard, borderColor: colors.border }}
-                >
-                  <AppText>
-                    {selectedSection?.name ?? "Select Section"}
-                  </AppText>
-                  <AppText muted>▼</AppText>
-                </TouchableOpacity>
-              </View>
-            )}
+              <AppText semibold muted size="label">Section</AppText>
+              <TouchableOpacity
+                disabled={!selectedClass}
+                onPress={() => setShowSectionPicker(true)}
+                activeOpacity={0.85}
+                className="px-4 py-3 rounded-xl border flex-row justify-between items-center"
+                style={{ backgroundColor: colors.bgCard, borderColor: colors.border, opacity: selectedClass ? 1 : 0.5, }}
+              >
+                <AppText>
+                  {selectedSection?.name ?? "Select Section"}
+                </AppText>
+                <AppText muted>▼</AppText>
+              </TouchableOpacity>
+            </View>
             </View>
             <TouchableOpacity
               onPress={loadStudents}
@@ -240,7 +239,7 @@ export default function StudentAttendancePage() {
                 style={{ backgroundColor: colors.bgCard }}
               >
                 <View className="flex-row items-center gap-2">
-                  <ChevronRightCircle size={20} color={colors.text} />
+                  <ChevronRightCircle size={20} color={colors.primary} />
                   <AppText size="title" semibold>Select Class</AppText>
                 </View>
                 <TextInput
@@ -283,7 +282,7 @@ export default function StudentAttendancePage() {
                 style={{ backgroundColor: colors.bgCard }}
               >
                 <View className="flex-row items-center gap-2">
-                  <ChevronRightCircle size={20} color={colors.text} />
+                  <ChevronRightCircle size={20} color={colors.primary} />
                   <AppText size="title" semibold>Select Section</AppText>
                 </View>
                 <FlatList
