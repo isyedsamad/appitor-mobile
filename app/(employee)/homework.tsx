@@ -301,6 +301,7 @@ export default function EmployeeHomeworkPage() {
           ) : null
         }
       />
+        <ScrollView>
         <View
           className="flex-row mx-5 mt-4 p-1 rounded-2xl border"
           style={{
@@ -870,7 +871,7 @@ export default function EmployeeHomeworkPage() {
             </View>
           </View>
         </Modal>
-
+        </ScrollView>
       </Screen>
     </>
   );

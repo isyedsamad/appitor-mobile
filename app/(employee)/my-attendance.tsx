@@ -154,14 +154,15 @@ export default function MyAttendancePage() {
 
   const lineData = graphData.labels.map((label, i) => ({
     value: graphData.values[i],
-    label: label  // Optional x-label
+    label: label
   }));
 
   if (loading) return <Loading />;
 
   return (
-    <Screen>
+    <Screen scroll={false}>
       <Header title="My Attendance" />
+      <ScrollView>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} className="px-5 mt-5">
         {sessions.map(s => {
           const active = s.id === session;
@@ -387,6 +388,7 @@ export default function MyAttendancePage() {
           </View>
         </View>
       </Modal>
+      </ScrollView>
     </Screen>
   );
 }

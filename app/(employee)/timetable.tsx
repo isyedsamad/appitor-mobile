@@ -13,6 +13,7 @@ import {
   FlatList,
   Modal,
   Platform,
+  ScrollView,
   TouchableOpacity,
   View,
 } from "react-native";
@@ -203,8 +204,9 @@ export default function EmployeeTimetablePage() {
   if (loading) return <Loading />;
 
   return (
-    <Screen>
+    <Screen scroll={false}>
       <Header title="Timetable" />
+      <ScrollView>
       <View
         className="mx-5 mt-4 rounded-full"
         style={{
@@ -383,6 +385,7 @@ export default function EmployeeTimetablePage() {
         data={classData.find((c: any) => c.id === classId)?.sections || []}
         onSelect={(s: any) => setSectionId(s.id)}
       />
+      </ScrollView>
     </Screen>
   );
 }

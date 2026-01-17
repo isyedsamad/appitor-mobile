@@ -12,6 +12,7 @@ import { useState } from "react";
 import {
   FlatList,
   Modal,
+  ScrollView,
   TouchableOpacity,
   View,
 } from "react-native";
@@ -72,8 +73,9 @@ export default function StudentsListPage() {
 
   if(loading) return (<Loading />)
   return (
-    <Screen>
+    <Screen scroll={false}>
       <Header title="Students" />
+      <ScrollView>
       <View className="flex-row mx-7 mt-5 gap-3">
         <View className="flex-1 gap-1">
           <AppText size="label">Class</AppText>
@@ -189,6 +191,7 @@ export default function StudentsListPage() {
         onClose={() => setShowSectionPicker(false)}
         onSelect={(s: any) => setSectionId(s.id)}
       />
+      </ScrollView>
     </Screen>
   );
 }

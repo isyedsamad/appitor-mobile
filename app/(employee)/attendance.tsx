@@ -12,7 +12,7 @@ import {
 } from "firebase/firestore";
 import { CheckCircle, ChevronRightCircle, Search, ShieldCheck, Users, XCircle } from "lucide-react-native";
 import { useMemo, useState } from "react";
-import { FlatList, Modal, TextInput, TouchableOpacity, View } from "react-native";
+import { FlatList, Modal, ScrollView, TextInput, TouchableOpacity, View } from "react-native";
 import Toast from "react-native-toast-message";
 
 type StatusKey = "P" | "A" | "L" | "M";
@@ -181,8 +181,9 @@ export default function StudentAttendancePage() {
   return (
     <>
       {(loadingData || saving) && <Loading />}
-      <Screen>
+      <Screen scroll={false}>
         <Header title="Attendance" />
+        <ScrollView>
         <View className="px-5 mt-6 gap-4">
           <View
             className="px-3 gap-1"
@@ -555,6 +556,7 @@ export default function StudentAttendancePage() {
             </TouchableOpacity>
           )}
         </View>
+        </ScrollView>
       </Screen>
     </>
   );
