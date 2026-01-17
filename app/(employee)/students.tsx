@@ -71,7 +71,6 @@ export default function StudentsListPage() {
     );
 
   if(loading) return (<Loading />)
-
   return (
     <Screen>
       <Header title="Students" />
@@ -173,7 +172,6 @@ export default function StudentsListPage() {
           />
         )}
       </View>
-
       <PickerModal
         visible={showClassPicker}
         title="Select Class"
@@ -184,7 +182,6 @@ export default function StudentsListPage() {
           setSectionId("");
         }}
       />
-
       <PickerModal
         visible={showSectionPicker}
         title="Select Section"
