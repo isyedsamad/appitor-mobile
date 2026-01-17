@@ -448,7 +448,7 @@ function PickerModal({ visible, onClose, title, data, onSelect }: any) {
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={() => onClose()}>
       <View className="flex-1 justify-end bg-black/60">
-        <View className="rounded-t-3xl px-6 py-6"
+        <View className="rounded-t-3xl px-6 py-6 max-h-[70vh]"
           style={{ backgroundColor: colors.bgCard }}>
             <View className="flex-row items-center gap-2">
               <ChevronRightCircle size={18} />

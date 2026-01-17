@@ -196,7 +196,7 @@ export default function EmployeeDashboard() {
         <Shortcut
           icon={<AlarmClock size={22} color={colors.primary} />}
           label="Attendance"
-          onPress={() => router.push("/(employee)/attendance")}
+          onPress={() => router.push("/(employee)/my-attendance")}
         />
         <Shortcut
           icon={<CalendarDays size={22} color={colors.primary} />}

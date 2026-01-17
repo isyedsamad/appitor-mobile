@@ -321,7 +321,7 @@ export default function MyAttendancePage() {
 
       <Modal visible={!!selectedMonth} statusBarTranslucent transparent animationType="slide" onRequestClose={() => setSelectedMonth(null)}>
         <View className="flex-1 justify-end bg-black/60">
-          <View className="rounded-t-3xl p-8" style={{ backgroundColor: colors.bgCard }}>
+          <View className="rounded-t-3xl p-8 max-h-[80vh]" style={{ backgroundColor: colors.bgCard }}>
             <View className="flex-row justify-between mb-4">
               <AppText size="title" semibold>
                 {formatMonthKey(selectedMonth?.key)}

@@ -10,9 +10,9 @@ import secureAxios from "@/lib/secureAxios";
 import DateTimePicker, { DateTimePickerAndroid } from '@react-native-community/datetimepicker';
 import { useRouter } from "expo-router";
 import { doc, getDoc } from "firebase/firestore";
-import { BookOpen, Calendar, ChevronRight, Plus, Search, Users } from "lucide-react-native";
+import { BookOpen, Calendar, ChevronRight, Plus, PlusCircle, Search, Users } from "lucide-react-native";
 import { useEffect, useState } from "react";
-import { FlatList, Modal, Platform, TextInput, TouchableOpacity, View } from 'react-native';
+import { FlatList, Modal, Platform, ScrollView, TextInput, TouchableOpacity, View } from 'react-native';
 import Toast from "react-native-toast-message";
 
 const formatDateDMY = (date: any) => {
@@ -430,7 +430,7 @@ export default function EmployeeHomeworkPage() {
         <Modal visible={showClassPickerSearch} statusBarTranslucent transparent animationType="slide" onRequestClose={() => setShowClassPickerSearch(false)}>
           <View className="flex-1 justify-end bg-black/60">
             <View
-              className="rounded-t-3xl px-6 py-6"
+              className="rounded-t-3xl px-6 py-6 max-h-[70vh]"
               style={{ backgroundColor: colors.bgCard }}
             >
               <View className="flex-row items-center gap-2">
@@ -463,7 +463,7 @@ export default function EmployeeHomeworkPage() {
           onRequestClose={() => setShowSectionPickerSearch(false)}>
           <View className="flex-1 justify-end bg-black/60">
             <View
-              className="rounded-t-3xl px-6 py-6"
+              className="rounded-t-3xl px-6 py-6 max-h-[70vh]"
               style={{ backgroundColor: colors.bgCard }}
             >
               <View className="flex-row items-center gap-2">
@@ -554,13 +554,19 @@ export default function EmployeeHomeworkPage() {
         >
           <View className="flex-1 justify-end bg-black/60">
             <View
-              className="rounded-t-3xl px-8 pt-6 pb-6"
+              className="rounded-t-3xl px-8 pt-6"
               style={{ backgroundColor: colors.bgCard }}
             >
-              <View className="flex-row mb-4 items-center gap-3">
-                <Plus size={20} color={colors.text} /> 
+              <View className="flex-row pb-4 items-center gap-3">
+                <PlusCircle size={20} color={colors.primary} /> 
                 <AppText size="title" semibold>Homework</AppText>
               </View>
+              <ScrollView
+                className="max-h-[70vh]"
+                showsVerticalScrollIndicator={false}
+                contentContainerStyle={{ paddingBottom: 20 }}
+                nestedScrollEnabled={true}
+              >
               <View
                 className="mb-3"
                 style={{ height: 1, backgroundColor: colors.border }}
@@ -734,6 +740,7 @@ export default function EmployeeHomeworkPage() {
                   Save Homework
                 </AppText>
               </TouchableOpacity>
+              </ScrollView>
             </View>
           </View>
         </Modal>
@@ -741,7 +748,7 @@ export default function EmployeeHomeworkPage() {
         <Modal visible={showClassPicker} statusBarTranslucent={true} transparent animationType="slide" onRequestClose={() => setShowClassPicker(false)}>
           <View className="flex-1 justify-end bg-black/60">
             <View
-              className="rounded-t-3xl py-6 px-6"
+              className="rounded-t-3xl py-6 px-6 max-h-[70vh]"
               style={{ backgroundColor: colors.bgCard, borderWidth: 3, borderColor: colors.border }}
             >
               <View className="flex-row items-center gap-2">
@@ -773,7 +780,7 @@ export default function EmployeeHomeworkPage() {
         <Modal visible={showSectionPicker} statusBarTranslucent={true} transparent animationType="slide" onRequestClose={() => setShowSectionPicker(false)}>
           <View className="flex-1 justify-end bg-black/60">
             <View
-              className="rounded-t-3xl py-6 px-6"
+              className="rounded-t-3xl py-6 px-6 max-h-[70vh]"
               style={{ backgroundColor: colors.bgCard }}
             >
               <View className="flex-row items-center gap-2">
@@ -804,7 +811,7 @@ export default function EmployeeHomeworkPage() {
         <Modal visible={showPeriodPicker} statusBarTranslucent={true} transparent animationType="slide" onRequestClose={() => setShowPeriodPicker(false)}>
           <View className="flex-1 justify-end bg-black/60">
             <View
-              className="rounded-t-3xl py-6 px-6"
+              className="rounded-t-3xl py-6 px-6 max-h-[70vh]"
               style={{ backgroundColor: colors.bgCard }}
             >
               <View className="flex-row items-center gap-2">
@@ -836,7 +843,7 @@ export default function EmployeeHomeworkPage() {
         <Modal visible={showSubjectPicker} statusBarTranslucent={true} transparent animationType="slide" onRequestClose={() => setShowSubjectPicker(false)}>
           <View className="flex-1 justify-end bg-black/60">
             <View
-              className="rounded-t-3xl py-6 px-6"
+              className="rounded-t-3xl py-6 px-6 max-h-[70vh]"
               style={{ backgroundColor: colors.bgCard }}
             >
               <View className="flex-row items-center gap-2">
