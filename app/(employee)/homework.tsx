@@ -24,7 +24,7 @@ const formatDateDMY = (date: any) => {
 
 export default function EmployeeHomeworkPage() {
   const router = useRouter();
-  const { schoolUser, classData, subjectData } = useAuth();
+  const { schoolUser, classData, subjectData, employeeData } = useAuth();
   const { colors } = useTheme();
   const [tab, setTab] = useState<"my" | "all">("my");
   const [date, setDate] = useState(new Date());
@@ -99,6 +99,8 @@ export default function EmployeeHomeworkPage() {
     subjectData.find((s: any) => s.id === id)?.name;
   const getClassName = (id: any) => classData.find((c: any) => c.id === id)?.name;
   const getSection = (cid: any, sid: any) => classData?.find((c: any) => c.id === cid)?.sections.find((s: any) => s.id == sid)?.name;
+  const getTeacherName = (id: any) =>
+    employeeData.find((t: any) => t.uid === id)?.name;
 
   useEffect(() => {
     async function loadTimetableSettings() {
@@ -212,8 +214,9 @@ export default function EmployeeHomeworkPage() {
         );
       }
       const snap = await getDoc(ref);
-      setHomework(snap.exists() ? snap.data().items || [] : []);
-      if(tab == "my") setMyHomework(snap.exists() ? snap.data().items || [] : []);
+      const sortedHW = snap.exists() ? snap.data().items ? snap.data().items.sort((a: any, b: any) => a.period - b.period) : [] : [];
+      setHomework(sortedHW);
+      if(tab == "my") setMyHomework(sortedHW);
     } finally {
       setLoading(false);
     }
@@ -280,6 +283,13 @@ export default function EmployeeHomeworkPage() {
     } finally {
       setLoading(false);
     }
+  }
+
+  const capitalizeWords = (str: string) => {
+    if(!str) return; 
+    return str.replace(/\w\S*/g, txt => 
+      txt.charAt(0).toUpperCase() + txt.slice(1).toLowerCase()
+    );
   }
 
   if(loading) return <Loading />
@@ -376,7 +386,7 @@ export default function EmployeeHomeworkPage() {
             </TouchableOpacity>
           </View>
           {tab === "all" && (
-            <View className="flex-row justify-center items-center gap-4">
+            <View className="flex-row justify-center items-center gap-3">
               <View className="flex-1">
                 <AppText size="label" muted>Class</AppText>
                 <TouchableOpacity
@@ -509,19 +519,19 @@ export default function EmployeeHomeworkPage() {
               style={{ flex: 1, marginBottom: 20 }}
               renderItem={({ item }) => (
                 <View
-                  className="p-5 rounded-2xl border"
+                  className="rounded-2xl border"
                   style={{
                     backgroundColor: colors.bgCard,
                     borderColor: colors.border,
                   }}
                 >
-                  <View className="flex-row items-center gap-3">
+                  <View className="p-5 flex-row items-center gap-3 rounded-t-2xl" style={{ backgroundColor: colors.bg, borderBottomWidth: 1, borderColor: colors.border }}>
                     <View
                       className="px-3 h-11 rounded-xl items-center justify-center"
                       style={{ backgroundColor: colors.primarySoft }}
                     >
                       <AppText bold style={{ color: colors.primary }}>
-                        {getClassName(item.classId)} {getSection(item.classId, item.sectionId)}
+                        P{item.period}
                       </AppText>
                     </View>
                     <View className="flex-1">
@@ -529,17 +539,18 @@ export default function EmployeeHomeworkPage() {
                         {getSubjectName(item.subjectId)}
                       </AppText>
                       <AppText size="subtext" muted>
-                        Period: {item.period.toString().padStart(2, '0')}
+                        Class: {getClassName(item.classId)} {getSection(item.classId, item.sectionId)}
                       </AppText>
                     </View>
+                    <View className="px-3 py-2 rounded-2xl" style={{ backgroundColor: colors.bgCard, borderWidth: 1, borderColor: colors.border }}>
+                      <AppText size="min" muted semibold>{capitalizeWords(getTeacherName(tab == "all" ? item.teacherId : schoolUser.uid))}</AppText>
+                    </View>
                   </View>
-                  <View
-                    className="my-4"
-                    style={{ height: 1, backgroundColor: colors.border, opacity: 0.6 }}
-                  />
-                  <AppText style={{ lineHeight: 22 }}>
-                    {item.content}
-                  </AppText>
+                  <View className="py-4 px-5">
+                    <AppText style={{ lineHeight: 22 }}>
+                      {item.content}
+                    </AppText>
+                  </View>
                 </View>
               )}
             />
