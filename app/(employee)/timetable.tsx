@@ -326,7 +326,7 @@ export default function EmployeeTimetablePage() {
           </View>
           <TouchableOpacity
             onPress={loadClassTimetable}
-            className="mx-7 mt-4 py-3 rounded-xl items-center flex-row justify-center items-center gap-2"
+            className="mx-7 mt-4 py-3 rounded-xl items-center flex-row justify-center gap-2"
             style={{ backgroundColor: colors.primary }}>
               <Search size={17} color={'#fff'} />
               <AppText semibold style={{ color: "#fff" }}>
