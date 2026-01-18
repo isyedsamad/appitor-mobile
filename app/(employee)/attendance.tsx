@@ -178,6 +178,13 @@ export default function StudentAttendancePage() {
     M: Object.values(attendance).filter(v => v === "M").length,
   }), [attendance]);
 
+  const capitalizeWords = (str: string) => {
+    if(!str) return; 
+    return str.replace(/\w\S*/g, txt => 
+      txt.charAt(0).toUpperCase() + txt.slice(1).toLowerCase()
+    );
+  }
+
   return (
     <>
       {(loadingData || saving) && <Loading />}
@@ -485,8 +492,8 @@ export default function StudentAttendancePage() {
                   </AppText>
                 </View>
                 <View className="flex-1">
-                  <AppText size="body" bold className="capitalize">
-                    {s.name}
+                  <AppText size="body" bold>
+                    {capitalizeWords(s.name)}
                   </AppText>
                   <AppText size="subtext" semibold muted>
                     App ID: {s.appId ?? "--"}

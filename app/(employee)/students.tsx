@@ -161,7 +161,7 @@ export default function StudentsListPage() {
                       </AppText>
                     </View>
                     <View>
-                      <AppText semibold className="capitalize">{capitalizeWords(item.name)}</AppText>
+                      <AppText semibold>{capitalizeWords(item.name)}</AppText>
                       <AppText size="min" muted semibold>
                         App ID: {item.appId}
                       </AppText>

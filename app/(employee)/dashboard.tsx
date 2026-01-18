@@ -152,6 +152,13 @@ export default function EmployeeDashboard() {
     year: "numeric",
   });
 
+  const capitalizeWords = (str: string) => {
+    if(!str) return; 
+    return str.replace(/\w\S*/g, txt => 
+      txt.charAt(0).toUpperCase() + txt.slice(1).toLowerCase()
+    );
+  }
+
   return (
     <>
     {loading && <Loading />}
@@ -341,6 +348,12 @@ export function DashboardHeader({
 }) {
   const { colors } = useTheme();
   const { text: greeting, Icon } = getGreeting();
+  const capitalizeWords = (str: string) => {
+    if(!str) return; 
+    return str.replace(/\w\S*/g, txt => 
+      txt.charAt(0).toUpperCase() + txt.slice(1).toLowerCase()
+    );
+  }
 
   return (
     <View className="overflow-hidden">
@@ -360,8 +373,8 @@ export function DashboardHeader({
             <AppText size="subtext" muted bold>
               Welcome back 👋
             </AppText>
-            <AppText size="heading" bold style={{ marginTop: 1, textTransform: 'capitalize' }}>
-              {userName}
+            <AppText size="heading" bold style={{ marginTop: 1 }}>
+              {capitalizeWords(userName)}
             </AppText>
             <AppText size="subtext" muted>
               {new Date().toDateString()}

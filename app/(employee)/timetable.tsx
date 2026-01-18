@@ -401,6 +401,12 @@ function PeriodCard({ slot, timeline }: any) {
     subjectData.find((s: any) => s.id === id)?.name;
   const getClassName = (id: any) => classData.find((c: any) => c.id === id)?.name;
   const getSection = (cid: any, sid: any) => classData?.find((c: any) => c.id === cid)?.sections.find((s: any) => s.id == sid)?.name;
+  const capitalizeWords = (str: string) => {
+    if(!str) return; 
+    return str.replace(/\w\S*/g, txt => 
+      txt.charAt(0).toUpperCase() + txt.slice(1).toLowerCase()
+    );
+  }
   return (
     <View
       className="flex-row items-start gap-4 p-4 rounded-2xl border"
@@ -422,8 +428,8 @@ function PeriodCard({ slot, timeline }: any) {
           {getClassName(slot.classId)} {getSection(slot.classId, slot.sectionId)} -{" "}
           {getSubjectName(slot.subjectId)}
         </AppText>
-        <AppText size="subtext" muted semibold className="capitalize">
-          {getTeacherName(slot.teacherId)}
+        <AppText size="subtext" muted semibold>
+          {capitalizeWords(getTeacherName(slot.teacherId))}
         </AppText>
         <AppText size="min" muted semibold>
           {minutesToTime(time.start)} – {minutesToTime(time.end)}
