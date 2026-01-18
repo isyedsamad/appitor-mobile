@@ -163,7 +163,8 @@ export default function MyAttendancePage() {
     <Screen scroll={false}>
       <Header title="My Attendance" />
       <ScrollView>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} className="px-5 mt-5">
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} className="px-5 mt-5" 
+        contentContainerStyle={{ paddingRight: 30 }}>
         {sessions.map(s => {
           const active = s.id === session;
           return (

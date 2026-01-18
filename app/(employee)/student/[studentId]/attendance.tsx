@@ -230,7 +230,8 @@ export default function StudentAttendancePage() {
             ))}
           </View>
         </View>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} className="px-5 mt-4">
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} className="px-5 mt-4"
+          contentContainerStyle={{ paddingRight: 30 }}>
           {sessions.map(s => {
             const active = s.id === session;
             return (
