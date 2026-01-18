@@ -89,28 +89,29 @@ export default function EmployeeComplaintPage() {
     loadSessions();
   }, []);
 
+  async function loadComplaints() {
+    setLoading(true);
+    try {
+      const ref = doc(
+        db,
+        "schools",
+        schoolUser.schoolId,
+        "branches",
+        schoolUser.currentBranch,
+        "employees",
+        schoolUser.uid,
+        "complaints",
+        session
+      );
+      const snap = await getDoc(ref);
+      setComplaints(snap.exists() ? snap.data().items || [] : []);
+    } finally {
+      setLoading(false);
+    }
+  }
+
   useEffect(() => {
     if (!session) return;
-    async function loadComplaints() {
-      setLoading(true);
-      try {
-        const ref = doc(
-          db,
-          "schools",
-          schoolUser.schoolId,
-          "branches",
-          schoolUser.currentBranch,
-          "employees",
-          schoolUser.uid,
-          "complaints",
-          session
-        );
-        const snap = await getDoc(ref);
-        setComplaints(snap.exists() ? snap.data().items || [] : []);
-      } finally {
-        setLoading(false);
-      }
-    }
     loadComplaints();
   }, [session]);
 
@@ -144,16 +145,18 @@ export default function EmployeeComplaintPage() {
       });
       Toast.show({
         type: "success",
-        text1: "Complaint submitted successfully",
+        text1: "Complaint Submitted",
+        text2: "The authorities will respond shortly",
       });
       setOpenAdd(false);
       setTitle("");
       setDescription("");
+      await loadComplaints();
     } catch (err: any) {
       Toast.show({
         type: "error",
         text1: "Failed to submit complaint",
-        text2: err.response?.data?.message,
+        text2: "Error: " +err.response?.data?.message,
       });
     } finally {
       setLoading(false);
@@ -175,6 +178,7 @@ export default function EmployeeComplaintPage() {
       Toast.show({
         type: "success",
         text1: "Complaint withdrawn",
+        text2: "Feel free to add more!"
       });
       setShowWithdrawConfirm(false);
       setWithdrawItem(null);
@@ -231,7 +235,7 @@ export default function EmployeeComplaintPage() {
           })}
         </ScrollView>
         <View
-          className="mx-5 mt-5 px-6 py-5 rounded-2xl border"
+          className="mx-5 mt-5 px-6 py-4 rounded-2xl border"
           style={{
             backgroundColor: colors.bgCard,
             borderColor: colors.border,
@@ -252,7 +256,7 @@ export default function EmployeeComplaintPage() {
             >
               <AppText semibold style={{ color: colors.primary }}>
                 Total:{" "}
-                {summary.total
+                {summary.total == 0 ? summary.total : summary.total
                   .toString()
                   .padStart(2, "0")}
               </AppText>
@@ -409,8 +413,9 @@ export default function EmployeeComplaintPage() {
                 onChangeText={setTitle}
                 placeholder="Short title for your complaint"
                 placeholderTextColor={colors.textMuted}
-                className="mt-1 px-4 py-3 rounded-2xl border"
+                className="mt-1 px-4 py-3 rounded-2xl"
                 style={{
+                  borderWidth: 2,
                   borderColor: colors.border,
                   color: colors.text,
                 }}
@@ -424,9 +429,10 @@ export default function EmployeeComplaintPage() {
                 multiline
                 placeholder="Explain the issue in detail…"
                 placeholderTextColor={colors.textMuted}
-                className="mt-1 px-4 py-4 rounded-2xl border"
+                className="mt-1 px-4 py-4 rounded-2xl"
                 style={{
                   minHeight: 120,
+                  borderWidth: 2,
                   borderColor: colors.border,
                   color: colors.text,
                   textAlignVertical: "top",

@@ -77,37 +77,48 @@ export default function EmployeeLeavePage() {
 
   useEffect(() => {
     async function loadSessions() {
-      const ref = doc(db, "schools", schoolUser.schoolId, "settings", "academic");
-      const snap = await getDoc(ref);
-      if (!snap.exists()) return;
-      setSessions(snap.data().sessions);
-      setSession(snap.data().currentSession || snap.data().sessions[0]?.id);
-    }
-    loadSessions();
-  }, []);
-
-  useEffect(() => {
-    if (!session) return;
-    async function loadLeaves() {
       setLoading(true);
       try {
-        const ref = doc(
-          db,
-          "schools",
-          schoolUser.schoolId,
-          "branches",
-          schoolUser.currentBranch,
-          "employees",
-          schoolUser.uid,
-          "leave",
-          session
-        );
+        const ref = doc(db, "schools", schoolUser.schoolId, "settings", "academic");
         const snap = await getDoc(ref);
-        setLeaves(snap.exists() ? snap.data().items || [] : []);
+        if (!snap.exists()) return;
+        setSessions(snap.data().sessions);
+        setSession(snap.data().currentSession || snap.data().sessions[0]?.id);
+      } catch(err) {
+        Toast.show({
+          type: 'error',
+          text1: 'Failed to load Sessions'
+        })
       } finally {
         setLoading(false);
       }
     }
+    loadSessions();
+  }, []);
+
+  async function loadLeaves() {
+    setLoading(true);
+    try {
+      const ref = doc(
+        db,
+        "schools",
+        schoolUser.schoolId,
+        "branches",
+        schoolUser.currentBranch,
+        "employees",
+        schoolUser.uid,
+        "leave",
+        session
+      );
+      const snap = await getDoc(ref);
+      setLeaves(snap.exists() ? snap.data().items || [] : []);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    if (!session) return;
     loadLeaves();
   }, [session]);
 
@@ -151,11 +162,12 @@ export default function EmployeeLeavePage() {
         days: totalDays,
         appId: schoolUser.employeeId,
       });
-      Toast.show({ type: "success", text1: "Leave requested successfully" });
+      Toast.show({ type: "success", text1: "Request in Progress", text2: 'Leave requested successfully' });
       setOpenAdd(false);
       setReason("");
       setMode("single");
       setToDate(null);
+      await loadLeaves();
     } catch(err: any) {
       Toast.show({
         type: 'error',
@@ -178,7 +190,8 @@ export default function EmployeeLeavePage() {
       });
       Toast.show({
         type: "success",
-        text1: "Leave withdrawn successfully",
+        text1: "Request Withdrawn",
+        text2: "Leave withdrawn successfully",
       });
       setShowWithdrawConfirm(false);
       setWithdrawLeave(null);
@@ -233,7 +246,7 @@ export default function EmployeeLeavePage() {
         </ScrollView>
 
         <View
-          className="mx-5 mt-5 px-6 py-5 rounded-2xl border"
+          className="mx-5 mt-4 px-6 py-4 rounded-2xl border"
           style={{
             backgroundColor: colors.bgCard,
             borderColor: colors.border,
@@ -261,7 +274,7 @@ export default function EmployeeLeavePage() {
             className="my-4"
             style={{ height: 1, backgroundColor: colors.border }}
           />
-          <View className="flex-row gap-4">
+          <View className="flex-row gap-3">
             <SummaryItem
               label="Approved"
               value={summary.approved}
@@ -387,9 +400,10 @@ export default function EmployeeLeavePage() {
                 multiline
                 value={reason}
                 onChangeText={setReason}
-                className="mt-1 px-4 py-4 rounded-2xl border"
+                className="mt-1 px-4 py-4 rounded-2xl"
                 style={{
                   minHeight: 90,
+                  borderWidth: 2,
                   borderColor: colors.border,
                   color: colors.text,
                   textAlignVertical: "top",
@@ -556,8 +570,8 @@ function SummaryItem({ label, value, variant }: any) {
     <View
       className="flex-1 px-5 py-3 rounded-xl border"
       style={{
-        backgroundColor: ui.bg,
-        borderColor: ui.border,
+        backgroundColor: colors.bg,
+        borderColor: colors.border,
       }}
     >
       <AppText size="min" semibold>
@@ -566,7 +580,7 @@ function SummaryItem({ label, value, variant }: any) {
       <AppText
         size="title"
         semibold
-        style={{ color: ui.text }}
+        style={{ color: variant == 'approved' ? 'green' : 'red' }}
       >
         {value == 0 ? value : value.toString().padStart(2, "0")}
       </AppText>
@@ -593,8 +607,8 @@ function DatePicker({ label, date, onChange }: any) {
       <AppText size="label" muted>{label} Date</AppText>
       <TouchableOpacity
         onPress={open}
-        className="mt-1 px-4 py-3 rounded-xl border"
-        style={{ borderColor: colors.border }}>
+        className="mt-1 px-4 py-3 rounded-xl"
+        style={{ borderWidth: 2, borderColor: colors.border }}>
         <AppText semibold>{date ? formatDMY(date) : "Select date"}</AppText>
       </TouchableOpacity>
     </View>
