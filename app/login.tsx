@@ -1,27 +1,30 @@
-import { Ionicons } from "@expo/vector-icons";
-import { Picker } from "@react-native-picker/picker";
-import { useEffect, useState } from "react";
+import { useRouter } from 'expo-router';
+import { collection, getDocs } from 'firebase/firestore';
+import { ChevronDown, ChevronRightCircle, Lock, User, X } from 'lucide-react-native';
+import { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
+  FlatList,
   Image,
+  Modal,
   Pressable,
+  ScrollView,
   View,
-} from "react-native";
+} from 'react-native';
+import Toast from 'react-native-toast-message';
 
-import { AppText } from "@/components/ui/AppText";
-import { Button } from "@/components/ui/Buttons";
-import { Card } from "@/components/ui/Card";
-import { Input } from "@/components/ui/Input";
-import { Screen } from "@/components/ui/Screen";
+import { AppText } from '@/components/ui/AppText';
+import { Button } from '@/components/ui/Buttons';
+import { Input } from '@/components/ui/Input';
+import { Screen } from '@/components/ui/Screen';
 
-import { Images } from "@/assets/images";
-import { useAuth } from "@/context/AuthContext";
-import { useTheme } from "@/context/ThemeContext";
-import { db } from "@/lib/firebase";
-import { login } from "@/services/auth.service";
-import { useRouter } from "expo-router";
-import { collection, getDocs } from "firebase/firestore";
-import Toast from "react-native-toast-message";
+import { Images } from '@/assets/images';
+import Loading from '@/components/ui/Loading';
+import { useAuth } from '@/context/AuthContext';
+import { useTheme } from '@/context/ThemeContext';
+import { db } from '@/lib/firebase';
+import { login } from '@/services/auth.service';
+import { LinearGradient } from 'expo-linear-gradient';
 
 type School = {
   id: string;
@@ -32,227 +35,257 @@ type School = {
 export default function LoginScreen() {
   const router = useRouter();
   const { theme, colors } = useTheme();
-  const { isLoaded, loading, schoolUser } = useAuth();
-
+  const { loading, isLoaded } = useAuth();
   const [schools, setSchools] = useState<School[]>([]);
-  const [schoolId, setSchoolId] = useState("");
-  const [schoolCode, setSchoolCode] = useState("");
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
-  const [schoolLoading, setSchoolLoading] = useState("Loading.. Please wait")
-
-  // useEffect(() => {
-  //   if(schoolUser) {
-  //     if (schoolUser.roleName === "teacher") {
-  //       router.replace("./(employee)/dashboard");
-  //     } else if (schoolUser.roleName === "student") {
-  //       router.replace("./(student)/dashboard");
-  //     } else {
-  //       router.replace("/welcome");
-  //     }
-  //   }
-  // }, [schoolUser])
+  const [schoolId, setSchoolId] = useState('');
+  const [schoolCode, setSchoolCode] = useState('');
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [schoolModal, setSchoolModal] = useState(false);
+  const [loadingLogin, setLoadingLogin] = useState(true);
+  const [schoolLoadingText, setSchoolLoadingText] = useState('Loading schools…');
 
   useEffect(() => {
-    let isActive = true;
+    let active = true;
     async function fetchSchools() {
+      setLoadingLogin(true);
       try {
-        const snap = await getDocs(collection(db, "schools"));
-        if(isActive) {
-          setSchools(
-            snap.docs.map((doc) => ({
-              id: doc.id,
-              name: doc.data().name,
-              code: doc.data().code,
-            }))
-          );
-          setSchoolLoading("Select your School");
-        }
+        const snap = await getDocs(collection(db, 'schools'));
+        if (!active) return;
+        setSchools(
+          snap.docs.map((doc) => ({
+            id: doc.id,
+            name: doc.data().name,
+            code: doc.data().code,
+          }))
+        );
+        setSchoolLoadingText('Select your school');
       } catch (e) {
-        console.log("Login fetch error:", e);
+        console.log('School fetch error:', e);
+        setSchoolLoadingText('Failed to load schools');
+      } finally {
+        setLoadingLogin(false);
       }
     }
     fetchSchools();
-    return () => { isActive = false; };
+    return () => {
+      active = false;
+    };
   }, []);
 
   async function handleLogin() {
     if (!schoolId) {
       Toast.show({
-        type: "error",
-        text1: "Select your School",
-        text2: "Please select your school from the List",
+        type: 'error',
+        text1: 'Select your school',
+        text2: 'Please choose your school to continue',
       });
       return;
     }
     if (!username || !password) {
       Toast.show({
-        type: "error",
-        text1: "Missing Fields",
-        text2: "Please fill all fields!",
+        type: 'error',
+        text1: 'Missing fields',
+        text2: 'Please fill all required fields',
       });
       return;
     }
     const email = `${username.trim().toLowerCase()}@${schoolCode.toLowerCase()}.appitor`;
+    setLoadingLogin(true);
     try {
-      const loginInfo = await login(email, password);
-      if(!loginInfo.success) {
+      const res = await login(email, password);
+      if (!res.success) {
         Toast.show({
-          type: "error",
-          text1: "Login failed",
-          text2: "" + loginInfo.msg,
+          type: 'error',
+          text1: 'Login failed',
+          text2: String(res.msg),
         });
-      }else {
-        router.replace("/");
+        return;
       }
-    } catch(err) {
+      router.replace('/');
+    } catch (err) {
       Toast.show({
-        type: "error",
-        text1: "Login failed",
-        text2: "Failed: " + err,
+        type: 'error',
+        text1: 'Login failed',
+        text2: String(err),
       });
+    } finally {
+      setLoadingLogin(false);
     }
   }
 
+  if (loadingLogin) return <Loading />;
+
   return (
-    <Screen>
-      <View className="flex-1">
-        <View
-          className="px-5 pt-12 pb-10 items-center"
-          style={{ backgroundColor: colors.bg }}
-        >
-          {theme == "light" ? <Image
-            source={Images.logoblack}
-            resizeMode="contain"
-            style={{ width: 96, height: 28 }}
-          /> : <Image
-            source={Images.logowhite}
-            resizeMode="contain"
-            style={{ width: 96, height: 28 }}
-          />}
-          <View className="mt-5">
-            <AppText size="heading" bold>
-              Welcome back
-            </AppText>
-            <AppText size="subtext" muted>
-              Sign in to continue to Appitor
-            </AppText>
+    <Screen scroll={false}>
+      <LinearGradient
+        colors={[colors.primarySoft, colors.bg]}
+        locations={[0.2, 1]}
+        className="flex-1">
+        <ScrollView>
+          <View className="items-center px-5 pb-10 pt-14">
+            <Image
+              source={theme === 'light' ? Images.logoblack : Images.logowhite}
+              resizeMode="contain"
+              style={{ width: 96, height: 28 }}
+            />
+            <View className="mt-6 items-center">
+              <AppText size="heading" bold>
+                Welcome back
+              </AppText>
+              <AppText size="subtext" muted>
+                Sign in to continue to Appitor
+              </AppText>
+            </View>
           </View>
-        </View>
-        <View className="px-3 -mt-4">
-          <Card>
-            <View className="gap-5 py-1">
-              <View
-                className="rounded-md px-2"
-                style={{
-                  backgroundColor: colors.bgCard,
-                  borderWidth: 1.5,
-                  borderColor: colors.border,
-                }}
-              >
-                <Picker
-                  selectedValue={schoolId}
-                  style={{ color: colors.text }}
-                  onValueChange={(value) => {
-                    const selected = schools.find((s) => s.id === value);
-                    setSchoolId(value);
-                    setSchoolCode(selected?.code || "");
-                  }}
-                >
-                  <Picker.Item label={schoolLoading} value="" />
-                  {schools.map((s) => (
-                    <Picker.Item
-                      key={s.id}
-                      label={`${s.name} (${s.code.toUpperCase()})`}
-                      value={s.id}
-                    />
-                  ))}
-                </Picker>
+          <View className="-mt-4 px-5">
+            <View
+              className="rounded-2xl p-6"
+              style={{
+                backgroundColor: colors.bg,
+                borderWidth: 1,
+                borderColor: colors.border,
+              }}>
+              <View className="gap-5">
+                <View>
+                  <AppText size="label" muted semibold>
+                    School
+                  </AppText>
+                  <Pressable
+                    onPress={() => setSchoolModal(true)}
+                    className="mt-1 flex-row items-center justify-between rounded-md px-3 py-3"
+                    style={{
+                      backgroundColor: colors.bgCard,
+                      borderWidth: 1.5,
+                      borderColor: colors.border,
+                    }}>
+                    <AppText muted={!schoolId}>
+                      {schoolId
+                        ? `${schools.find((s) => s.id === schoolId)?.name} (${schoolCode.toUpperCase()})`
+                        : schoolLoadingText}
+                    </AppText>
+                    <ChevronDown size={18} color={colors.textMuted} />
+                  </Pressable>
+                </View>
+                <Input
+                  label="School App ID"
+                  placeholder="e.g. A2500001"
+                  value={username}
+                  onChangeText={setUsername}
+                  autoCapitalize="none"
+                  icon={<User size={18} color={colors.textMuted} />}
+                />
+                <Input
+                  label="Password (DOB for students)"
+                  placeholder="DDMMYYYY"
+                  value={password}
+                  onChangeText={setPassword}
+                  secureTextEntry
+                  autoCapitalize="none"
+                  icon={<Lock size={18} color={colors.textMuted} />}
+                />
+                <Pressable
+                  onPress={() =>
+                    Toast.show({
+                      type: 'error',
+                      text1: 'Password reset',
+                      text2: 'Please contact your school administration',
+                    })
+                  }
+                  className="self-end">
+                  <AppText size="subtext" muted>
+                    Forgot password?
+                  </AppText>
+                </Pressable>
+                <Button
+                  title={loading ? 'Signing in…' : 'Login'}
+                  onPress={handleLogin}
+                  disabled={loading || !isLoaded}
+                />
+                {(loading || !isLoaded) && (
+                  <ActivityIndicator size="small" color={colors.primary} />
+                )}
               </View>
-              <Input
-                label="School App ID"
-                placeholder="i.e. A2500001"
-                value={username}
-                onChangeText={setUsername}
-                autoCapitalize="none"
-                icon={
-                  <Ionicons
-                    name="person-outline"
-                    size={18}
-                    color={colors.textMuted}
-                  />
-                }
-              />
-              <Input
-                label="Password (DOB for Students)"
-                placeholder="i.e. DDMMYYYY"
-                value={password}
-                onChangeText={setPassword}
-                secureTextEntry
-                autoCapitalize="none"
-                icon={
-                  <Ionicons
-                    name="lock-closed-outline"
-                    size={18}
-                    color={colors.textMuted}
-                  />
-                }
-              />
-              <Pressable
-                onPress={() =>
-                  Toast.show({
-                    type: "info",
-                    text1: "Password reset",
-                    text2: "Please contact your school administration",
-                  })
-                }
-                className="self-end"
-              >
-                <AppText size="subtext" muted>
-                  Forgot password?
-                </AppText>
-              </Pressable>
-              <Button
-                title={loading ? "Signing in..." : "Login"}
-                onPress={handleLogin}
-                disabled={loading || !isLoaded}
-              />
-              {(loading || !isLoaded) && (
-                <ActivityIndicator size="small" color={colors.primary} />
-              )}
+              <View className="mt-4 flex-row justify-between">
+                <Pressable
+                  onPress={() => Toast.show({ type: 'info', text1: 'Opening Terms & Conditions' })}>
+                  <AppText size="subtext" muted>
+                    Terms & Conditions
+                  </AppText>
+                </Pressable>
+                <Pressable
+                  onPress={() => Toast.show({ type: 'info', text1: 'Opening Privacy Policy' })}>
+                  <AppText size="subtext" muted>
+                    Privacy Policy
+                  </AppText>
+                </Pressable>
+              </View>
             </View>
-            <View className="flex-row justify-between mt-1">
-              <Pressable onPress={() => Toast.show({ type: "info", text1: "Opening Terms & Conditions" })}>
-                <AppText size="subtext" muted>
-                  Terms & Conditions
-                </AppText>
-              </Pressable>
-              <Pressable onPress={() => Toast.show({ type: "info", text1: "Opening Privacy Policy" })}>
-                <AppText size="subtext" muted>
-                  Privacy Policy
-                </AppText>
-              </Pressable>
+          </View>
+          <View className="mt-6 items-center gap-1">
+            <View className="flex-row gap-1">
+              <AppText size="subtext" muted bold>
+                Developed by
+              </AppText>
+              <AppText size="subtext" primary bold>
+                Appitor
+              </AppText>
             </View>
-          </Card>
-        </View>
-        {/* <View className="absolute bottom-2 w-full items-center gap-1"> */}
-        <View className="w-full items-center gap-1 mt-5">
-          <View className="flex-row gap-1 mb-1">
-            <AppText size="subtext" muted bold>
-              Developed by
-            </AppText>
-            <AppText size="subtext" primary bold>
-              Appitor
+            <AppText size="subtext" muted>
+              © {new Date().getFullYear()} Appitor. All rights reserved.
             </AppText>
           </View>
-          <AppText size="subtext" muted>
-            Made with ❤️ in India
-          </AppText>
-          <AppText size="subtext" muted>
-            © {new Date().getFullYear()} Appitor. All rights reserved.
-          </AppText>
-        </View>
-      </View>
+
+          <Modal
+            visible={schoolModal}
+            animationType="slide"
+            transparent
+            statusBarTranslucent
+            onRequestClose={() => setSchoolModal(false)}>
+            <View className="flex-1 justify-end bg-black/60">
+              <View
+                className="max-h-[70vh] rounded-t-3xl px-8 py-7"
+                style={{ backgroundColor: colors.bgCard }}>
+                <View className="mb-3 flex-row items-center justify-between">
+                  <View className="flex-row items-center gap-2">
+                    <ChevronRightCircle size={20} color={colors.primary} />
+                    <AppText size="title" semibold>
+                      Select School
+                    </AppText>
+                  </View>
+                  <Pressable onPress={() => setSchoolModal(false)}>
+                    <X size={22} color={colors.textMuted} />
+                  </Pressable>
+                </View>
+                <FlatList
+                  data={schools}
+                  className="mx-2"
+                  keyExtractor={(item) => item.id}
+                  keyboardShouldPersistTaps="handled"
+                  renderItem={({ item }) => (
+                    <Pressable
+                      onPress={() => {
+                        setSchoolId(item.id);
+                        setSchoolCode(item.code);
+                        setSchoolModal(false);
+                      }}
+                      style={{
+                        paddingVertical: 14,
+                        borderBottomWidth: 1,
+                        borderBottomColor: colors.border,
+                      }}>
+                      <AppText bold>{item.name}</AppText>
+                      <AppText size="subtext" muted>
+                        {item.code.toUpperCase()}
+                      </AppText>
+                    </Pressable>
+                  )}
+                />
+              </View>
+            </View>
+          </Modal>
+        </ScrollView>
+      </LinearGradient>
     </Screen>
   );
 }

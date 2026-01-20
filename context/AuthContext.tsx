@@ -1,7 +1,8 @@
-import { db } from "@/lib/firebase";
-import { logout, subscribeToAuthChanges } from "@/services/auth.service";
-import { doc, getDoc } from "firebase/firestore";
-import React, { createContext, useContext, useEffect, useState } from "react";
+import { db } from '@/lib/firebase';
+import { logout, subscribeToAuthChanges } from '@/services/auth.service';
+import { doc, getDoc } from 'firebase/firestore';
+import React, { createContext, useContext, useEffect, useState } from 'react';
+import Toast from 'react-native-toast-message';
 
 type AuthContextType = {
   schoolUser: any | null;
@@ -9,7 +10,7 @@ type AuthContextType = {
   isLoaded: boolean;
   classData: any | null;
   subjectData: any | null;
-  employeeData: any | [],
+  employeeData: any | [];
 };
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -21,92 +22,89 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [isLoaded, setIsLoaded] = useState(false);
   const loadClasses = async (schoolId: any, branch: any) => {
-    if(!branch) return;
+    if (!branch) return;
     setLoading(true);
-    const classSnap = await getDoc(doc(db, 'schools', schoolId, 'branches', branch, 'classes', 'data'));
-    if(!classSnap.exists()) return; 
+    const classSnap = await getDoc(
+      doc(db, 'schools', schoolId, 'branches', branch, 'classes', 'data')
+    );
+    if (!classSnap.exists()) return;
     const classdata = classSnap.data();
     setClassData(classdata.classData);
     setLoading(false);
-  }
+  };
   const loadSubjects = async (schoolId: any, branch: any) => {
-    if(!branch) return;
+    if (!branch) return;
     setLoading(true);
-    const subSnap = await getDoc(doc(db, 'schools', schoolId, 'branches', branch, 'subjects', 'branch_subjects'));
-    if(!subSnap.exists()) return; 
+    const subSnap = await getDoc(
+      doc(db, 'schools', schoolId, 'branches', branch, 'subjects', 'branch_subjects')
+    );
+    if (!subSnap.exists()) return;
     const subdata = subSnap.data();
     setSubjectData(subdata.subjects);
     setLoading(false);
-  }
+  };
   const loadEmployee = async (schoolId: any, branch: any) => {
     if (!branch) return;
     setLoading(true);
     try {
-      const metaRef = doc(
-        db,
-        "schools",
-        schoolId,
-        "branches",
-        branch,
-        "meta",
-        "employees"
-      );
+      const metaRef = doc(db, 'schools', schoolId, 'branches', branch, 'meta', 'employees');
       const snap = await getDoc(metaRef);
       if (!snap.exists()) {
         setEmployeeData([]);
         return;
       }
       const employees = snap.data().employees || [];
-      employees.sort((a: any, b: any) =>
-        String(a.employeeId).localeCompare(String(b.employeeId))
-      );
+      employees.sort((a: any, b: any) => String(a.employeeId).localeCompare(String(b.employeeId)));
       setEmployeeData(employees);
     } catch (err) {
-      console.error("LOAD EMPLOYEE META ERROR:", err);
+      Toast.show({
+        type: 'error',
+        text1: 'Failed to Open App',
+        text2: 'Error: ' + err,
+      });
+      console.error('LOAD EMPLOYEE META ERROR:', err);
     } finally {
       setLoading(false);
     }
-  }
+  };
   useEffect(() => {
     const unsub = subscribeToAuthChanges(async (firebaseUser) => {
       setLoading(true);
       setIsLoaded(false);
-      if(!firebaseUser) {
+      if (!firebaseUser) {
         setSchoolUser(null);
         setLoading(false);
         setIsLoaded(true);
         return;
       }
       try {
-        const userSnap = await getDoc(doc(db, "schoolUsers", firebaseUser.uid));
-        if(!userSnap.exists()) {
+        const userSnap = await getDoc(doc(db, 'schoolUsers', firebaseUser.uid));
+        if (!userSnap.exists()) {
           setSchoolUser(null);
           await logout();
           return;
         }
         const userData = userSnap.data();
-        if(userData.status == "disabled") {
+        if (userData.status == 'disabled') {
           setSchoolUser(null);
           await logout();
           return;
         }
-        const schoolSnap = await getDoc(doc(db, "schools", userData.schoolId));
-        if(!schoolSnap.exists()) {
+        const schoolSnap = await getDoc(doc(db, 'schools', userData.schoolId));
+        if (!schoolSnap.exists()) {
           setSchoolUser(null);
           await logout();
           return;
         }
         const schoolData = schoolSnap.data();
-        if(schoolData.status != "active") {
+        if (schoolData.status != 'active') {
           setSchoolUser(null);
           await logout();
           return;
         }
         let roleData = null;
-        if(userData.roleId != "student") {
-          const roleSnap = await getDoc(
-            doc(db, "roles", userData.roleId)
-          );
+        if (userData.roleId != 'student') {
+          const roleSnap = await getDoc(doc(db, 'roles', userData.roleId));
           if (!roleSnap.exists()) {
             setSchoolUser(null);
             await logout();
@@ -128,7 +126,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           permissions: roleData ? roleData.permissions || [] : [],
         });
       } catch (error) {
-        console.log("Failed AuthContext: " + error);
+        console.log('Failed AuthContext: ' + error);
       } finally {
         setLoading(false);
         setIsLoaded(true);
@@ -137,7 +135,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return unsub;
   }, []);
   return (
-    <AuthContext.Provider value={{ schoolUser, loading, isLoaded, classData, subjectData, employeeData }}>
+    <AuthContext.Provider
+      value={{ schoolUser, loading, isLoaded, classData, subjectData, employeeData }}>
       {children}
     </AuthContext.Provider>
   );
@@ -146,7 +145,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 export function useAuth() {
   const ctx = useContext(AuthContext);
   if (!ctx) {
-    throw new Error("useAuth must be used inside AuthProvider");
+    throw new Error('useAuth must be used inside AuthProvider');
   }
   return ctx;
 }

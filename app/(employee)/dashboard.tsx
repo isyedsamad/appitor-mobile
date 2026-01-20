@@ -1,16 +1,16 @@
-"use client";
+'use client';
 
-import { TodayEmployeeAttendanceCard } from "@/components/employee/TodayEmployeeAttendanceCard";
-import { AppText } from "@/components/ui/AppText";
-import Loading from "@/components/ui/Loading";
-import { Screen } from "@/components/ui/Screen";
-import { useAuth } from "@/context/AuthContext";
-import { useTheme } from "@/context/ThemeContext";
-import { db } from "@/lib/firebase";
-import { LinearGradient } from "expo-linear-gradient";
-import { useRouter } from "expo-router";
-import { doc, getDoc } from "firebase/firestore";
-import type { LucideIcon } from "lucide-react-native";
+import { TodayEmployeeAttendanceCard } from '@/components/employee/TodayEmployeeAttendanceCard';
+import { AppText } from '@/components/ui/AppText';
+import Loading from '@/components/ui/Loading';
+import { Screen } from '@/components/ui/Screen';
+import { useAuth } from '@/context/AuthContext';
+import { useTheme } from '@/context/ThemeContext';
+import { db } from '@/lib/firebase';
+import { LinearGradient } from 'expo-linear-gradient';
+import { useRouter } from 'expo-router';
+import { doc, getDoc } from 'firebase/firestore';
+import type { LucideIcon } from 'lucide-react-native';
 import {
   AlarmClock,
   BadgeCheck,
@@ -22,13 +22,14 @@ import {
   FileText,
   GraduationCap,
   Library,
+  NotebookText,
   Sun,
   Sunrise,
   Sunset,
-  Users
-} from "lucide-react-native";
-import { useEffect, useState } from "react";
-import { TouchableOpacity, View } from "react-native";
+  Users,
+} from 'lucide-react-native';
+import { useEffect, useState } from 'react';
+import { TouchableOpacity, View } from 'react-native';
 
 export default function EmployeeDashboard() {
   const router = useRouter();
@@ -62,17 +63,17 @@ export default function EmployeeDashboard() {
     const loadAttendance = async () => {
       try {
         const today = new Date();
-        const dateStr = `${String(today.getDate()).padStart(2, "0")}-${String(
+        const dateStr = `${String(today.getDate()).padStart(2, '0')}-${String(
           today.getMonth() + 1
-        ).padStart(2, "0")}-${today.getFullYear()}`;
+        ).padStart(2, '0')}-${today.getFullYear()}`;
         const docId = `employee_${dateStr}`;
         const docRef = doc(
           db,
-          "schools",
+          'schools',
           schoolUser.schoolId,
-          "branches",
+          'branches',
           schoolUser.currentBranch,
-          "attendance",
+          'attendance',
           docId
         );
         const snap = await getDoc(docRef);
@@ -88,7 +89,7 @@ export default function EmployeeDashboard() {
           });
         }
       } catch (error) {
-        console.error("Error loading attendance:", error);
+        console.error('Error loading attendance:', error);
         setAttendance(null);
       } finally {
         setLoading(false);
@@ -96,81 +97,77 @@ export default function EmployeeDashboard() {
     };
     loadAttendance();
   }, [schoolUser]);
-  
-  const statusKey = attendance?.status ?? "M";
+
+  const statusKey = attendance?.status ?? 'M';
   const statusMap: any = {
     P: {
-      label: "Present",
+      label: 'Present',
       bg: colors.statusPbg,
       text: colors.statusPtext,
       border: colors.statusPborder,
-      note: "You were marked present today",
+      note: 'You were marked present today',
     },
     A: {
-      label: "Absent",
+      label: 'Absent',
       bg: colors.statusAbg,
       text: colors.statusAtext,
       border: colors.statusAborder,
-      note: "You were marked absent today",
+      note: 'You were marked absent today',
     },
     L: {
-      label: "On Leave",
+      label: 'On Leave',
       bg: colors.statusLbg,
       text: colors.statusLtext,
       border: colors.statusLborder,
-      note: "Approved leave for today",
+      note: 'Approved leave for today',
     },
     H: {
-      label: "Half Day",
+      label: 'Half Day',
       bg: colors.statusHbg,
       text: colors.statusHtext,
       border: colors.statusHborder,
-      note: "Half day attendance recorded",
+      note: 'Half day attendance recorded',
     },
     O: {
-      label: "Over Time",
+      label: 'Over Time',
       bg: colors.statusObg,
       text: colors.statusOtext,
       border: colors.statusOborder,
-      note: "Overtime recorded for today",
+      note: 'Overtime recorded for today',
     },
     M: {
-      label: "Not Marked",
+      label: 'Not Marked',
       bg: colors.warningSoft,
       text: colors.warning,
       border: colors.border,
-      note: "Attendance not marked yet",
+      note: 'Attendance not marked yet',
     },
   };
 
   const status = statusMap[statusKey];
   const today = new Date();
-  const dateLabel = today.toLocaleDateString("en-IN", {
-    weekday: "long",
-    day: "2-digit",
-    month: "long",
-    year: "numeric",
+  const dateLabel = today.toLocaleDateString('en-IN', {
+    weekday: 'long',
+    day: '2-digit',
+    month: 'long',
+    year: 'numeric',
   });
 
   const capitalizeWords = (str: string) => {
-    if(!str) return; 
-    return str.replace(/\w\S*/g, txt => 
-      txt.charAt(0).toUpperCase() + txt.slice(1).toLowerCase()
-    );
-  }
+    if (!str) return;
+    return str.replace(/\w\S*/g, (txt) => txt.charAt(0).toUpperCase() + txt.slice(1).toLowerCase());
+  };
 
   return (
     <>
-    {loading && <Loading />}
-    <Screen>
-      <DashboardHeader
-        schoolName={schoolUser.schoolName}
-        userName={schoolUser.name}
-        onNotificationPress={() =>
-          router.push("/(employee)/notifications")
-        }
-      />
-      {/* <View
+      {loading && <Loading />}
+      <Screen>
+        <DashboardHeader
+          schoolName={schoolUser.schoolName}
+          userName={schoolUser.name}
+          onNotificationPress={() => router.push('/(employee)/notifications')}
+        />
+        {/* <View
         className="px-8 py-4 border-b-2 border-l-2 border-r-2 rounded-b-3xl"
         style={{
           backgroundColor: colors.bgCard,
@@ -197,130 +194,131 @@ export default function EmployeeDashboard() {
         </View>
       </View> */}
 
-      <View className="px-5">
+        <View className="px-5">
+          <View className="mt-7 flex-row gap-3">
+            <Shortcut
+              icon={<AlarmClock size={22} color={colors.primary} />}
+              label="Attendance"
+              onPress={() => router.push('/(employee)/my-attendance')}
+            />
+            <Shortcut
+              icon={<CalendarDays size={22} color={colors.primary} />}
+              label="Timetable"
+              onPress={() => router.push('/(employee)/timetable')}
+            />
+            <Shortcut
+              icon={<Users size={22} color={colors.primary} />}
+              label="Students"
+              onPress={() => router.push('/(employee)/students')}
+            />
+            <Shortcut
+              icon={<BadgeCheck size={22} color={colors.primary} />}
+              label="Assignment"
+              onPress={() => router.push('/(employee)/assignment')}
+            />
+          </View>
 
-      <View className="flex-row mt-7 gap-3">
-        <Shortcut
-          icon={<AlarmClock size={22} color={colors.primary} />}
-          label="Attendance"
-          onPress={() => router.push("/(employee)/my-attendance")}
-        />
-        <Shortcut
-          icon={<CalendarDays size={22} color={colors.primary} />}
-          label="Timetable"
-          onPress={() => router.push("/(employee)/timetable")}
-        />
-        <Shortcut
-          icon={<Users size={22} color={colors.primary} />}
-          label="Students"
-          onPress={() => router.push("/(employee)/students")}
-        />
-        <Shortcut
-          icon={<BadgeCheck size={22} color={colors.primary} />}
-          label="Assignment"
-          onPress={() => router.push("/(employee)/assignment")}
-        />
-      </View>
+          <TodayEmployeeAttendanceCard statusKey={statusKey} dateLabel={dateLabel} />
 
-      <TodayEmployeeAttendanceCard
-        statusKey={statusKey}
-        dateLabel={dateLabel}
-      />
+          <View className="mt-6 flex-row gap-4">
+            <BigAction
+              icon={<FileText size={24} color={colors.primary} />}
+              label="Homework"
+              description="Assign and evaluate homework"
+              helper="Academic"
+              onPress={() => router.push('/(employee)/homework')}
+            />
+            <BigAction
+              icon={<ClipboardCheck size={24} color={colors.primary} />}
+              label="Attendance"
+              description="Mark and review class attendance"
+              helper="Daily task"
+              onPress={() => router.push('/(employee)/attendance')}
+            />
+          </View>
 
-      <View className="flex-row mt-6 gap-4">
-        <BigAction
-          icon={<FileText size={24} color={colors.primary} />}
-          label="Homework"
-          description="Assign and evaluate homework"
-          helper="Academic"
-          onPress={() => router.push("/(employee)/homework")}
-        />
-        <BigAction
-          icon={<ClipboardCheck size={24} color={colors.primary} />}
-          label="Attendance"
-          description="Mark and review class attendance"
-          helper="Daily task"
-          onPress={() => router.push("/(employee)/attendance")}
-        />
-      </View>
-
-      <Section title="Academic Portal">
-        <PortalGrid>
-          <PortalItem
-            icon={<Library size={24} color={colors.primary} />}
-            label="Online Class"
-            onPress={() => router.push("/(employee)/online-class")}
-          />
-          <PortalItem
-            icon={<GraduationCap size={24} color={colors.primary} />}
-            label="Exam Portal"
-            onPress={() => router.push("/(employee)/exams")}
-          />
-          <PortalItem
-            icon={<Users size={24} color={colors.primary} />}
-            label="Students"
-            onPress={() => router.push("/(employee)/students")}
-          />
-          <PortalItem
-            icon={<AlarmClock size={24} color={colors.primary} />}
-            label="My Attendance"
-            onPress={() => router.push("/(employee)/my-attendance")}
-          />
-          <PortalItem
-            icon={<CalendarDays size={24} color={colors.primary} />}
-            label="Timetable"
-            onPress={() => router.push("/(employee)/timetable")}
-          />
-          <PortalItem
-            icon={<BadgeCheck size={24} color={colors.primary} />}
-            label="Assignment"
-            onPress={() => router.push("/(employee)/assignment")}
-          />
-        </PortalGrid>
-      </Section>
-      <Section title="Utilities">
-        <PortalGrid>
-          <PortalItem
-            icon={<BookOpen size={24} color={colors.primary} />}
-            label="Salary"
-            onPress={() => router.push("/(employee)/salary")}
-          />
-          <PortalItem
-            icon={<FileText size={24} color={colors.primary} />}
-            label="Leave Portal"
-            onPress={() => router.push("/(employee)/leave")}
-          />
-          <PortalItem
-            icon={<Bell size={24} color={colors.primary} />}
-            label="Complaint"
-            onPress={() => router.push("/(employee)/complaint")}
-          />
-          <PortalItem
-            icon={<CalendarDays size={24} color={colors.primary} />}
-            label="Holiday"
-            onPress={() => router.push("/(employee)/holiday")}
-          />
-        </PortalGrid>
-      </Section>
-      </View>
-      <View style={{ borderBottomWidth: 1, borderColor: colors.border, marginTop: 25 }} />
-      <View className="w-full items-center gap-1 mt-8">
-        <View className="flex-row gap-1 mb-1">
-          <AppText size="subtext" muted bold>
-            Developed by
+          <Section title="Academic Portal">
+            <PortalGrid>
+              <PortalItem
+                icon={<Library size={24} color={colors.primary} />}
+                label="Online Class"
+                onPress={() => router.push('/(employee)/online-class')}
+              />
+              <PortalItem
+                icon={<GraduationCap size={24} color={colors.primary} />}
+                label="Exam Portal"
+                onPress={() => router.push('/(employee)/exams')}
+              />
+              <PortalItem
+                icon={<Users size={24} color={colors.primary} />}
+                label="Students"
+                onPress={() => router.push('/(employee)/students')}
+              />
+              <PortalItem
+                icon={<AlarmClock size={24} color={colors.primary} />}
+                label="My Attendance"
+                onPress={() => router.push('/(employee)/my-attendance')}
+              />
+              <PortalItem
+                icon={<CalendarDays size={24} color={colors.primary} />}
+                label="Timetable"
+                onPress={() => router.push('/(employee)/timetable')}
+              />
+              <PortalItem
+                icon={<BadgeCheck size={24} color={colors.primary} />}
+                label="Assignment"
+                onPress={() => router.push('/(employee)/assignment')}
+              />
+            </PortalGrid>
+          </Section>
+          <Section title="Utilities">
+            <PortalGrid>
+              <PortalItem
+                icon={<BookOpen size={24} color={colors.primary} />}
+                label="Salary"
+                onPress={() => router.push('/(employee)/salary')}
+              />
+              <PortalItem
+                icon={<FileText size={24} color={colors.primary} />}
+                label="Leave Portal"
+                onPress={() => router.push('/(employee)/leave')}
+              />
+              <PortalItem
+                icon={<Bell size={24} color={colors.primary} />}
+                label="Complaint"
+                onPress={() => router.push('/(employee)/complaint')}
+              />
+              <PortalItem
+                icon={<CalendarDays size={24} color={colors.primary} />}
+                label="Holiday"
+                onPress={() => router.push('/(employee)/holiday')}
+              />
+              <PortalItem
+                icon={<NotebookText size={24} color={colors.primary} />}
+                label="Study Material"
+                onPress={() => router.push('/(employee)/study-material')}
+              />
+            </PortalGrid>
+          </Section>
+        </View>
+        <View style={{ borderBottomWidth: 1, borderColor: colors.border, marginTop: 25 }} />
+        <View className="mt-8 w-full items-center gap-1">
+          <View className="mb-1 flex-row gap-1">
+            <AppText size="subtext" muted bold>
+              Developed by
+            </AppText>
+            <AppText size="subtext" primary bold>
+              Appitor
+            </AppText>
+          </View>
+          <AppText size="subtext" muted>
+            Made with ❤️ in India
           </AppText>
-          <AppText size="subtext" primary bold>
-            Appitor
+          <AppText size="subtext" muted>
+            © {new Date().getFullYear()} Appitor. All rights reserved.
           </AppText>
         </View>
-        <AppText size="subtext" muted>
-          Made with ❤️ in India
-        </AppText>
-        <AppText size="subtext" muted>
-          © {new Date().getFullYear()} Appitor. All rights reserved.
-        </AppText>
-      </View>
-    </Screen>
+      </Screen>
     </>
   );
 }
@@ -329,12 +327,12 @@ function getGreeting(): { text: string; Icon: LucideIcon } {
   const hour = new Date().getHours();
 
   if (hour < 12) {
-    return { text: "Good Morning", Icon: Sunrise };
+    return { text: 'Good Morning', Icon: Sunrise };
   }
   if (hour < 17) {
-    return { text: "Good Afternoon", Icon: Sun };
+    return { text: 'Good Afternoon', Icon: Sun };
   }
-  return { text: "Good Evening", Icon: Sunset };
+  return { text: 'Good Evening', Icon: Sunset };
 }
 
 export function DashboardHeader({
@@ -349,26 +347,17 @@ export function DashboardHeader({
   const { colors } = useTheme();
   const { text: greeting, Icon } = getGreeting();
   const capitalizeWords = (str: string) => {
-    if(!str) return; 
-    return str.replace(/\w\S*/g, txt => 
-      txt.charAt(0).toUpperCase() + txt.slice(1).toLowerCase()
-    );
-  }
+    if (!str) return;
+    return str.replace(/\w\S*/g, (txt) => txt.charAt(0).toUpperCase() + txt.slice(1).toLowerCase());
+  };
 
   return (
     <View className="overflow-hidden">
-      <LinearGradient
-        colors={[colors.primarySoft, colors.bg]}
-        className="px-6 pt-5 pb-6"
-      >
-        <AppText
-          size="label"
-          bold
-          className="text-center uppercase tracking-widest"
-        >
+      <LinearGradient colors={[colors.primarySoft, colors.bg]} className="px-6 pb-6 pt-5">
+        <AppText size="label" bold className="text-center uppercase tracking-widest">
           {schoolName}
         </AppText>
-        <View className="flex-row items-start justify-between mt-5">
+        <View className="mt-5 flex-row items-start justify-between">
           <View className="flex-1">
             <AppText size="subtext" muted bold>
               Welcome back 👋
@@ -380,9 +369,8 @@ export function DashboardHeader({
               {new Date().toDateString()}
             </AppText>
             <View
-              className="mt-3 px-4 py-2 self-start rounded-full"
-              style={{ backgroundColor: colors.primarySoft }}
-            >
+              className="mt-3 self-start rounded-full px-4 py-2"
+              style={{ backgroundColor: colors.primarySoft }}>
               <View className="flex-row items-center gap-2">
                 <Icon size={16} color={colors.primary} />
                 <AppText size="subtext" bold>
@@ -394,12 +382,11 @@ export function DashboardHeader({
           <TouchableOpacity
             onPress={onNotificationPress}
             activeOpacity={0.85}
-            className="p-3 rounded-2xl border"
+            className="rounded-2xl border p-3"
             style={{
               backgroundColor: colors.bgCard,
               borderColor: colors.border,
-            }}
-          >
+            }}>
             <Bell size={22} color={colors.text} />
           </TouchableOpacity>
         </View>
@@ -426,22 +413,13 @@ function Shortcut({
 }) {
   const { colors } = useTheme();
   return (
-    <TouchableOpacity
-      onPress={onPress}
-      activeOpacity={0.8}
-      className="flex-1 items-center"
-    >
+    <TouchableOpacity onPress={onPress} activeOpacity={0.8} className="flex-1 items-center">
       <View
-        className="w-14 h-14 items-center justify-center rounded-xl border"
-        style={{ backgroundColor: colors.bgCard, borderColor: colors.border }}
-      >
+        className="h-14 w-14 items-center justify-center rounded-xl border"
+        style={{ backgroundColor: colors.bgCard, borderColor: colors.border }}>
         {icon}
       </View>
-      <AppText
-        size="min"
-        muted semibold
-        className="text-center mt-2"
-      >
+      <AppText size="min" muted semibold className="mt-2 text-center">
         {label}
       </AppText>
     </TouchableOpacity>
@@ -464,11 +442,7 @@ function BigAction({
   const { colors } = useTheme();
 
   return (
-    <TouchableOpacity
-      onPress={onPress}
-      activeOpacity={0.88}
-      className="flex-1"
-    >
+    <TouchableOpacity onPress={onPress} activeOpacity={0.88} className="flex-1">
       <LinearGradient
         colors={[colors.primarySoft, colors.bgCard]}
         start={{ x: 0, y: 0 }}
@@ -478,13 +452,11 @@ function BigAction({
           borderWidth: 1,
           borderColor: colors.border,
           borderRadius: 16,
-        }}
-      >
+        }}>
         <View className="flex-row items-center justify-between">
           <View
-            className="w-14 h-14 rounded-xl items-center justify-center"
-            style={{ backgroundColor: colors.bg }}
-          >
+            className="h-14 w-14 items-center justify-center rounded-xl"
+            style={{ backgroundColor: colors.bg }}>
             {icon}
           </View>
           <AppText size="body" muted>
@@ -502,9 +474,8 @@ function BigAction({
           )}
           {helper && (
             <View
-              className="mt-3 px-3 py-1.5 self-start rounded-full"
-              style={{ backgroundColor: colors.primarySoft }}
-            >
+              className="mt-3 self-start rounded-full px-3 py-1.5"
+              style={{ backgroundColor: colors.primarySoft }}>
               <AppText size="subtext" primary>
                 {helper}
               </AppText>
@@ -520,28 +491,20 @@ function Section({ title, children }: any) {
   const { colors } = useTheme();
   return (
     <View className="mt-7">
-      <View className="flex-row items-center justify-center mb-4 gap-5">
-      <View className="flex-1" style={{ borderBottomWidth: 1.4, borderColor: colors.border }} />
+      <View className="mb-4 flex-row items-center justify-center gap-5">
+        <View className="flex-1" style={{ borderBottomWidth: 1.4, borderColor: colors.border }} />
         <AppText size="label" semibold muted className="text-center">
           {title}
         </AppText>
         <View className="flex-1" style={{ borderBottomWidth: 1.4, borderColor: colors.border }} />
       </View>
-      <View
-        className="px-2 py-2"
-      >
-        {children}
-      </View>
+      <View className="px-2 py-2">{children}</View>
     </View>
   );
 }
 
 function PortalGrid({ children }: any) {
-  return (
-    <View className="flex-row flex-wrap justify-between gap-y-6">
-      {children}
-    </View>
-  );
+  return <View className="flex-row flex-wrap justify-between gap-y-6">{children}</View>;
 }
 
 function PortalItem({
@@ -558,11 +521,7 @@ function PortalItem({
   const { colors } = useTheme();
 
   return (
-    <TouchableOpacity
-      onPress={onPress}
-      activeOpacity={0.85}
-      className="w-[30%] items-center"
-    >
+    <TouchableOpacity onPress={onPress} activeOpacity={0.85} className="w-[30%] items-center">
       {/* <View
         className="w-full py-5 items-center justify-center rounded-xl"
         style={{
@@ -573,30 +532,24 @@ function PortalItem({
       > */}
       <LinearGradient
         colors={[colors.bg, colors.bgCard]}
-        className="p-5 items-center justify-center"
+        className="items-center justify-center p-5"
         style={{
           borderWidth: 1,
           borderRadius: 10,
           borderColor: colors.border,
-        }}
-      >
+        }}>
         {icon}
         {badge && (
           <View
-            className="absolute -top-1 -right-1 px-2 py-0.5 rounded-full"
-            style={{ backgroundColor: colors.primary }}
-          >
-            <AppText size="subtext" bold style={{ color: "#fff" }}>
+            className="absolute -right-1 -top-1 rounded-full px-2 py-0.5"
+            style={{ backgroundColor: colors.primary }}>
+            <AppText size="subtext" bold style={{ color: '#fff' }}>
               {badge}
             </AppText>
           </View>
         )}
       </LinearGradient>
-      <AppText
-        size="min"
-        muted semibold
-        className="text-center mt-2"
-      >
+      <AppText size="min" muted semibold className="mt-2 text-center">
         {label}
       </AppText>
     </TouchableOpacity>
