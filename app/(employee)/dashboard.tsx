@@ -26,6 +26,7 @@ import {
   Sun,
   Sunrise,
   Sunset,
+  User2,
   Users,
 } from 'lucide-react-native';
 import { useEffect, useState } from 'react';
@@ -298,11 +299,16 @@ export default function EmployeeDashboard() {
                 label="Study Material"
                 onPress={() => router.push('/(employee)/study-material')}
               />
+              <PortalItem
+                icon={<User2 size={24} color={colors.primary} />}
+                label="My Profile"
+                onPress={() => router.push('/(employee)/profile')}
+              />
             </PortalGrid>
           </Section>
         </View>
         <View style={{ borderBottomWidth: 1, borderColor: colors.border, marginTop: 25 }} />
-        <View className="mt-8 w-full items-center gap-1">
+        <View className="mb-4 mt-8 w-full items-center gap-1">
           <View className="mb-1 flex-row gap-1">
             <AppText size="subtext" muted bold>
               Developed by
