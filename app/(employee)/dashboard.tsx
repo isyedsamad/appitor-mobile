@@ -34,7 +34,7 @@ import { TouchableOpacity, View } from 'react-native';
 
 export default function EmployeeDashboard() {
   const router = useRouter();
-  const { schoolUser } = useAuth();
+  const { schoolUser, isLoaded } = useAuth();
   const { colors } = useTheme();
   // const [dashboard, setDashboard] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -158,6 +158,10 @@ export default function EmployeeDashboard() {
     if (!str) return;
     return str.replace(/\w\S*/g, (txt) => txt.charAt(0).toUpperCase() + txt.slice(1).toLowerCase());
   };
+
+  useEffect(() => {
+    if (!schoolUser && isLoaded) router.replace('/');
+  }, [schoolUser]);
 
   return (
     <>

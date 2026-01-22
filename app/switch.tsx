@@ -142,7 +142,7 @@ export default function LoginScreen() {
             <View
               className="rounded-2xl p-6"
               style={{
-                backgroundColor: colors.bgCard,
+                backgroundColor: colors.bg,
                 borderWidth: 1,
                 borderColor: colors.border,
               }}>

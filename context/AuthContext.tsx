@@ -1,5 +1,7 @@
-import { db } from '@/lib/firebase';
+import { auth, db } from '@/lib/firebase';
 import { logout, subscribeToAuthChanges } from '@/services/auth.service';
+import { useRouter } from 'expo-router';
+import { signOut } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import Toast from 'react-native-toast-message';
@@ -11,16 +13,43 @@ type AuthContextType = {
   classData: any | null;
   subjectData: any | null;
   employeeData: any | [];
+  handleSignOut: any;
+  handleSwitch: any;
 };
 
 const AuthContext = createContext<AuthContextType | null>(null);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
+  const router = useRouter();
   const [schoolUser, setSchoolUser] = useState(null as any);
   const [classData, setClassData] = useState(null);
   const [subjectData, setSubjectData] = useState(null);
   const [employeeData, setEmployeeData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isLoaded, setIsLoaded] = useState(false);
+  async function handleSignOut() {
+    try {
+      await signOut(auth);
+    } catch (error) {
+      Toast.show({
+        type: 'error',
+        text1: 'Failed to SignOut',
+        text2: 'Error: ' + error,
+      });
+      console.error('Error signing out:', error);
+    }
+  }
+  async function handleSwitch() {
+    try {
+      await signOut(auth);
+    } catch (error) {
+      Toast.show({
+        type: 'error',
+        text1: 'Failed to SignOut',
+        text2: 'Error: ' + error,
+      });
+      console.error('Error signing out:', error);
+    }
+  }
   const loadClasses = async (schoolId: any, branch: any) => {
     if (!branch) return;
     setLoading(true);
@@ -136,7 +165,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
   return (
     <AuthContext.Provider
-      value={{ schoolUser, loading, isLoaded, classData, subjectData, employeeData }}>
+      value={{
+        schoolUser,
+        loading,
+        isLoaded,
+        classData,
+        subjectData,
+        employeeData,
+        handleSignOut,
+        handleSwitch,
+      }}>
       {children}
     </AuthContext.Provider>
   );
