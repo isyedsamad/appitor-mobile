@@ -1,17 +1,23 @@
 import { Images } from '@/assets/images';
-import { Screen } from '@/components/ui/Screen';
 import { useAuth } from '@/context/AuthContext';
 import { useTheme } from '@/context/ThemeContext';
 import { LinearGradient } from 'expo-linear-gradient';
+import * as NavigationBar from 'expo-navigation-bar';
 import { useRouter } from 'expo-router';
+import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
-import { ActivityIndicator, Image } from 'react-native';
+import { ActivityIndicator, Image, Platform } from 'react-native';
 
 export default function SplashScreen() {
   const router = useRouter();
   const { schoolUser, loading, isLoaded } = useAuth();
   const { theme, colors } = useTheme();
-
+  useEffect(() => {
+    if (Platform.OS === 'android') {
+      NavigationBar.setBackgroundColorAsync(colors.bg);
+      NavigationBar.setButtonStyleAsync(theme === 'dark' ? 'light' : 'dark');
+    }
+  }, [colors.bg, theme]);
   useEffect(() => {
     if (!isLoaded) return;
     if (!schoolUser) {
@@ -31,7 +37,8 @@ export default function SplashScreen() {
     }
   }, [schoolUser, isLoaded]);
   return (
-    <Screen>
+    <>
+      <StatusBar style={theme == 'light' ? 'dark' : 'light'} backgroundColor={colors.primarySoft} />
       <LinearGradient
         colors={[colors.primarySoft, colors.bg]}
         className="flex-1 items-center justify-center gap-8"
@@ -43,6 +50,6 @@ export default function SplashScreen() {
         )}
         <ActivityIndicator size="small" color={colors.primary} />
       </LinearGradient>
-    </Screen>
+    </>
   );
 }
