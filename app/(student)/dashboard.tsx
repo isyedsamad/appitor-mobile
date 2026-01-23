@@ -227,12 +227,12 @@ export default function EmployeeDashboard() {
             <Shortcut
               icon={<CalendarDays size={22} color={colors.primary} />}
               label="Timetable"
-              onPress={() => router.push('/(employee)/timetable')}
+              onPress={() => router.push('/(student)/timetable')}
             />
             <Shortcut
               icon={<BadgeCheck size={22} color={colors.primary} />}
               label="Assignment"
-              onPress={() => router.push('/(employee)/students')}
+              onPress={() => router.push('/(student)/assignment')}
             />
             <Shortcut
               icon={<CalendarDays size={22} color={colors.primary} />}
@@ -328,12 +328,12 @@ export default function EmployeeDashboard() {
               <PortalItem
                 icon={<CalendarDays size={24} color={colors.primary} />}
                 label="Timetable"
-                onPress={() => router.push('/(employee)/timetable')}
+                onPress={() => router.push('/(student)/timetable')}
               />
               <PortalItem
                 icon={<BadgeCheck size={24} color={colors.primary} />}
                 label="Assignment"
-                onPress={() => router.push('/(employee)/assignment')}
+                onPress={() => router.push('/(student)/assignment')}
               />
             </PortalGrid>
           </Section>
