@@ -165,7 +165,7 @@ export default function MyAttendancePage() {
               <TouchableOpacity
                 key={s.id}
                 onPress={() => setSession(s.id)}
-                className="mr-3 rounded-full px-5 py-2"
+                className="mr-2 rounded-full px-5 py-2"
                 style={{
                   backgroundColor: active ? colors.primarySoft : colors.bgCard,
                   borderWidth: 1,
@@ -182,10 +182,14 @@ export default function MyAttendancePage() {
         <View
           className="mx-5 mt-4 rounded-2xl p-5"
           style={{ backgroundColor: colors.bgCard, borderWidth: 1, borderColor: colors.border }}>
-          <View className="flex-row justify-between">
-            <AppText size="title" semibold>
-              {session}
-            </AppText>
+          <View className="flex-row items-center justify-between">
+            <View className="flex-col justify-start">
+              <AppText semibold>{session}</AppText>
+              <AppText size="min" muted semibold>
+                {summary.total == 0 ? summary.total : summary.total.toString().padStart(2, '0')}{' '}
+                Working Days
+              </AppText>
+            </View>
             <View className="rounded-lg px-3 py-1" style={{ backgroundColor: colors.primary }}>
               <AppText semibold alwaysWhite>
                 {safePercent(summary.P, summary.total)} %
