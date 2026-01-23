@@ -222,7 +222,7 @@ export default function EmployeeDashboard() {
             <Shortcut
               icon={<AlarmClock size={22} color={colors.primary} />}
               label="Attendance"
-              onPress={() => router.push('/(employee)/my-attendance')}
+              onPress={() => router.push('/(student)/my-attendance')}
             />
             <Shortcut
               icon={<CalendarDays size={22} color={colors.primary} />}
@@ -323,7 +323,7 @@ export default function EmployeeDashboard() {
               <PortalItem
                 icon={<AlarmClock size={24} color={colors.primary} />}
                 label="My Attendance"
-                onPress={() => router.push('/(employee)/my-attendance')}
+                onPress={() => router.push('/(student)/my-attendance')}
               />
               <PortalItem
                 icon={<CalendarDays size={24} color={colors.primary} />}
