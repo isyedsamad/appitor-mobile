@@ -15,12 +15,14 @@ type AuthContextType = {
   employeeData: any | [];
   handleSignOut: any;
   handleSwitch: any;
+  sessionAttData: any;
 };
 
 const AuthContext = createContext<AuthContextType | null>(null);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const [schoolUser, setSchoolUser] = useState(null as any);
+  const [sessionAttData, setSessionAttData] = useState(null as any);
   const [classData, setClassData] = useState(null);
   const [subjectData, setSubjectData] = useState(null);
   const [employeeData, setEmployeeData] = useState([]);
@@ -96,6 +98,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setLoading(false);
     }
   };
+  async function loadSessionAttendanceData(
+    schoolId: any,
+    branch: any,
+    studentId: any,
+    session: any
+  ) {
+    setLoading(true);
+    const ref = doc(
+      db,
+      'schools',
+      schoolId,
+      'branches',
+      branch,
+      'students',
+      studentId,
+      'attendance_session',
+      session
+    );
+    const snap = await getDoc(ref);
+    setSessionAttData(snap.exists() ? snap.data() : null);
+  }
   useEffect(() => {
     const unsub = subscribeToAuthChanges(async (firebaseUser) => {
       setLoading(true);
@@ -144,6 +167,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         await loadClasses(userData.schoolId, userData.currentBranch);
         await loadSubjects(userData.schoolId, userData.currentBranch);
         await loadEmployee(userData.schoolId, userData.currentBranch);
+        if (userData.roleId == 'student') {
+          await loadSessionAttendanceData(
+            userData.schoolId,
+            userData.currentBranch,
+            userData.uid,
+            schoolData.currentSession
+          );
+        }
         setSchoolUser({
           ...userData,
           uid: firebaseUser.uid,
@@ -174,6 +205,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         employeeData,
         handleSignOut,
         handleSwitch,
+        sessionAttData,
       }}>
       {children}
     </AuthContext.Provider>

@@ -6,9 +6,11 @@ import { useAuth } from '@/context/AuthContext';
 import { useTheme } from '@/context/ThemeContext';
 import { db } from '@/lib/firebase';
 import secureAxios from '@/lib/secureAxios';
+import { DateTimePickerAndroid } from '@react-native-community/datetimepicker';
 import { doc, getDoc } from 'firebase/firestore';
 import {
   AlertTriangle,
+  CalendarRange,
   ChevronRight,
   ChevronRightCircle,
   CircleX,
@@ -16,7 +18,7 @@ import {
   Trash2,
 } from 'lucide-react-native';
 import { useEffect, useMemo, useState } from 'react';
-import { Modal, ScrollView, TextInput, TouchableOpacity, View } from 'react-native';
+import { Modal, Platform, ScrollView, TextInput, TouchableOpacity, View } from 'react-native';
 import Toast from 'react-native-toast-message';
 
 const formatDMY = (d: Date) => {
@@ -26,18 +28,30 @@ const formatDMY = (d: Date) => {
   return `${day} ${month} ${year}`;
 };
 
-export default function EmployeeComplaintPage() {
+const getDaysBetween = (from: Date, to: Date) => {
+  const days = [];
+  const cur = new Date(from);
+  while (cur <= to) {
+    days.push(cur.toLocaleDateString('en-IN', { weekday: 'long' }));
+    cur.setDate(cur.getDate() + 1);
+  }
+  return days;
+};
+
+export default function StudentLeavePage() {
   const { schoolUser } = useAuth();
   const { colors } = useTheme();
   const [sessions, setSessions] = useState<any[]>([]);
   const [session, setSession] = useState('');
-  const [complaints, setComplaints] = useState<any[]>([]);
+  const [leaves, setLeaves] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [openAdd, setOpenAdd] = useState(false);
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
+  const [reason, setReason] = useState('');
+  const [fromDate, setFromDate] = useState(new Date());
+  const [toDate, setToDate] = useState<Date | null>(null);
+  const [mode, setMode] = useState<'single' | 'multi'>('single');
   const [showWithdrawConfirm, setShowWithdrawConfirm] = useState(false);
-  const [withdrawItem, setWithdrawItem] = useState<any>(null);
+  const [withdrawLeave, setWithdrawLeave] = useState<any>(null);
 
   const STATUS_UI = {
     pending: {
@@ -46,11 +60,17 @@ export default function EmployeeComplaintPage() {
       border: colors.statusLborder,
       label: 'PENDING',
     },
-    solved: {
+    approved: {
       bg: colors.statusPbg,
       text: colors.statusPtext,
       border: colors.statusPborder,
-      label: 'SOLVED',
+      label: 'APPROVED',
+    },
+    rejected: {
+      bg: colors.statusAbg,
+      text: colors.statusAtext,
+      border: colors.statusAborder,
+      label: 'REJECTED',
     },
   };
 
@@ -75,7 +95,7 @@ export default function EmployeeComplaintPage() {
     loadSessions();
   }, []);
 
-  async function loadComplaints() {
+  async function loadLeaves() {
     setLoading(true);
     try {
       const ref = doc(
@@ -84,13 +104,13 @@ export default function EmployeeComplaintPage() {
         schoolUser.schoolId,
         'branches',
         schoolUser.currentBranch,
-        'employees',
+        'students',
         schoolUser.uid,
-        'complaint',
+        'leave',
         session
       );
       const snap = await getDoc(ref);
-      setComplaints(snap.exists() ? snap.data().items || [] : []);
+      setLeaves(snap.exists() ? snap.data().items || [] : []);
     } finally {
       setLoading(false);
     }
@@ -98,51 +118,71 @@ export default function EmployeeComplaintPage() {
 
   useEffect(() => {
     if (!session) return;
-    loadComplaints();
+    loadLeaves();
   }, [session]);
 
   const summary = useMemo(
     () => ({
-      total: complaints.length,
-      pending: complaints.filter((c) => c.status === 'pending').length,
-      solved: complaints.filter((c) => c.status === 'solved').length,
+      total: leaves.length,
+      approved: leaves.filter((l) => l.status === 'approved').length,
+      rejected: leaves.filter((l) => l.status === 'rejected').length,
+      pending: leaves.filter((l) => l.status === 'pending').length,
     }),
-    [complaints]
+    [leaves]
   );
 
-  async function saveComplaint() {
-    if (!title.trim() || !description.trim()) {
+  const daysList = useMemo(() => {
+    if (mode === 'single') return [fromDate.toLocaleDateString('en-IN', { weekday: 'long' })];
+    if (!toDate) return [];
+    return getDaysBetween(fromDate, toDate);
+  }, [fromDate, toDate, mode]);
+
+  const totalDays = daysList.length || 1;
+
+  async function saveLeave() {
+    if (!reason.trim()) {
       Toast.show({
         type: 'error',
-        text1: 'Missing details',
-        text2: 'Please enter heading and description',
+        text1: 'Please enter Leave Reason',
+        text2: 'enter a valid reason to request!',
+      });
+      return;
+    }
+    if (mode == 'multi' && !toDate) {
+      Toast.show({
+        type: 'error',
+        text1: 'Please Select To-Date',
+        text2: 'select a valid to-date to request!',
       });
       return;
     }
     setLoading(true);
     try {
-      await secureAxios.post('/api/school/complaint/create', {
-        type: 'employee',
+      await secureAxios.post('/api/school/leave/create', {
+        type: 'student',
         branch: schoolUser.currentBranch,
         session,
-        title,
-        description,
-        appId: schoolUser.employeeId,
+        reason,
+        from: formatDMY(fromDate),
+        to: mode === 'multi' && toDate ? formatDMY(toDate) : null,
+        days: totalDays,
+        appId: schoolUser.appId,
       });
       Toast.show({
         type: 'success',
-        text1: 'Complaint Submitted',
-        text2: 'The authorities will respond shortly',
+        text1: 'Request in Progress',
+        text2: 'Leave requested successfully',
       });
       setOpenAdd(false);
-      setTitle('');
-      setDescription('');
-      await loadComplaints();
+      setReason('');
+      setMode('single');
+      setToDate(null);
+      await loadLeaves();
     } catch (err: any) {
       Toast.show({
         type: 'error',
-        text1: 'Failed to submit complaint',
-        text2: 'Error: ' + err.response?.data?.message,
+        text1: 'Failed to send Request',
+        text2: 'Error: ' + err.response.data.message,
       });
     } finally {
       setLoading(false);
@@ -152,20 +192,26 @@ export default function EmployeeComplaintPage() {
   async function confirmWithdraw() {
     try {
       setLoading(true);
-      await secureAxios.post('/api/school/complaint/withdraw', {
-        type: 'employee',
+      await secureAxios.post('/api/school/leave/withdraw', {
+        type: 'student',
         branch: schoolUser.currentBranch,
         session,
-        complaintId: withdrawItem.id,
+        leaveId: withdrawLeave.id,
       });
-      setComplaints((prev) => prev.filter((c) => c.id !== withdrawItem.id));
       Toast.show({
         type: 'success',
-        text1: 'Complaint withdrawn',
-        text2: 'Feel free to add more!',
+        text1: 'Request Withdrawn',
+        text2: 'Leave withdrawn successfully',
       });
       setShowWithdrawConfirm(false);
-      setWithdrawItem(null);
+      setWithdrawLeave(null);
+      setLeaves((prev) => prev.filter((l) => l.id !== withdrawLeave.id));
+    } catch (err: any) {
+      Toast.show({
+        type: 'error',
+        text1: 'Failed to withdraw Leave',
+        text2: 'Error: ' + err.response.data.message,
+      });
     } finally {
       setLoading(false);
     }
@@ -176,7 +222,7 @@ export default function EmployeeComplaintPage() {
   return (
     <Screen scroll={false}>
       <Header
-        title="Complaint Portal"
+        title="Leave Portal"
         rightSlot={
           <TouchableOpacity
             onPress={() => setOpenAdd(true)}
@@ -211,8 +257,9 @@ export default function EmployeeComplaintPage() {
             );
           })}
         </ScrollView>
+
         <View
-          className="mx-5 mt-5 rounded-2xl border px-6 py-4"
+          className="mx-5 mt-4 rounded-2xl border px-6 py-4"
           style={{
             backgroundColor: colors.bgCard,
             borderColor: colors.border,
@@ -220,7 +267,7 @@ export default function EmployeeComplaintPage() {
           <View className="flex-row items-center justify-between">
             <View>
               <AppText size="label" muted>
-                Complaint Overview
+                Leave Overview
               </AppText>
               <AppText size="title" semibold>
                 {session}
@@ -233,30 +280,26 @@ export default function EmployeeComplaintPage() {
               </AppText>
             </View>
           </View>
-          <View
-            className="my-4"
-            style={{
-              height: 1,
-              backgroundColor: colors.border,
-            }}
-          />
+          <View className="my-4" style={{ height: 1, backgroundColor: colors.border }} />
           <View className="flex-row gap-3">
-            <SummaryItem label="Pending" value={summary.pending} variant="pending" />
-            <SummaryItem label="Solved" value={summary.solved} variant="solved" />
+            <SummaryItem label="Approved" value={summary.approved} variant="approved" />
+            <SummaryItem label="Rejected" value={summary.rejected} variant="rejected" />
           </View>
         </View>
 
-        <View className="mt-5 px-5">
-          {complaints.length === 0 ? (
+        <View className="mx-3 my-4" style={{ height: 1, backgroundColor: colors.border }} />
+
+        <View className="px-5">
+          {leaves.length === 0 ? (
             <View className="items-center py-20">
-              <AppText muted>No complaints found</AppText>
+              <AppText muted>No leave requests found</AppText>
             </View>
           ) : (
-            complaints.map((c) => {
-              const ui = STATUS_UI[c.status as keyof typeof STATUS_UI];
+            leaves.map((l: any) => {
+              const ui = STATUS_UI[l.status as keyof typeof STATUS_UI];
               return (
                 <View
-                  key={c.id}
+                  key={l.id}
                   className="mb-4 overflow-hidden rounded-2xl"
                   style={{
                     backgroundColor: colors.bgCard,
@@ -267,10 +310,10 @@ export default function EmployeeComplaintPage() {
                     <View className="flex-row items-start justify-between">
                       <View className="flex-1 pr-3">
                         <AppText size="body" semibold>
-                          {c.title}
+                          {l.reason}
                         </AppText>
                         <AppText size="min" muted semibold>
-                          {formatDMY(c.createdAt.toDate())}
+                          Leave Request
                         </AppText>
                       </View>
                       <View
@@ -284,35 +327,34 @@ export default function EmployeeComplaintPage() {
                         </AppText>
                       </View>
                     </View>
-                    <AppText size="subtext" className="mt-3">
-                      {c.description}
-                    </AppText>
+                    <View className="mt-4 flex-row items-center gap-3">
+                      <View className="rounded-lg px-4 py-3" style={{ backgroundColor: colors.bg }}>
+                        <CalendarRange size={18} color={colors.primary} />
+                      </View>
+                      <View className="flex-1">
+                        <AppText semibold size="label">
+                          {l.from}
+                          {l.to ? ` → ${l.to}` : ''}
+                        </AppText>
+                        <AppText size="min" muted semibold>
+                          {l.days} day{l.days > 1 ? 's' : ''}
+                        </AppText>
+                      </View>
+                    </View>
                   </View>
-                  {c.status === 'pending' && (
+                  {l.status === 'pending' && (
                     <>
-                      <View
-                        style={{
-                          borderTopWidth: 1,
-                          borderColor: colors.statusAborder,
-                        }}
-                      />
+                      <View style={{ borderTopWidth: 1, borderColor: colors.statusAborder }}></View>
                       <TouchableOpacity
                         onPress={() => {
-                          setWithdrawItem(c);
+                          setWithdrawLeave(l);
                           setShowWithdrawConfirm(true);
                         }}
                         className="flex-row items-center gap-2 px-6 py-4"
-                        style={{
-                          backgroundColor: colors.statusAbg,
-                        }}>
+                        style={{ backgroundColor: colors.statusAbg }}>
                         <Trash2 size={13} color={colors.statusAtext} />
-                        <AppText
-                          size="subtext"
-                          semibold
-                          style={{
-                            color: colors.statusAtext,
-                          }}>
-                          Withdraw Complaint
+                        <AppText size="subtext" semibold style={{ color: colors.statusAtext }}>
+                          Withdraw Leave Request
                         </AppText>
                       </TouchableOpacity>
                     </>
@@ -323,17 +365,21 @@ export default function EmployeeComplaintPage() {
           )}
         </View>
       </ScrollView>
-
-      <Modal visible={openAdd} transparent statusBarTranslucent animationType="slide">
+      <Modal
+        visible={openAdd}
+        statusBarTranslucent
+        transparent
+        animationType="slide"
+        onRequestClose={() => setOpenAdd(false)}>
         <View className="flex-1 justify-end bg-black/60">
           <View
             className="max-h-[80vh] rounded-t-3xl px-6 pt-6"
             style={{ backgroundColor: colors.bgCard }}>
             <View className="mb-5 flex-row items-center justify-between">
-              <View className="flex-row items-center gap-2">
+              <View className="flex-row items-center justify-start gap-2">
                 <ChevronRightCircle size={18} color={colors.primary} />
                 <AppText size="title" semibold>
-                  Raise Complaint
+                  Request Leave
                 </AppText>
               </View>
               <TouchableOpacity onPress={() => setOpenAdd(false)}>
@@ -342,53 +388,102 @@ export default function EmployeeComplaintPage() {
             </View>
             <ScrollView contentContainerStyle={{ paddingBottom: 20 }}>
               <AppText size="label" muted>
-                Heading
+                Reason
               </AppText>
               <TextInput
-                value={title}
-                onChangeText={setTitle}
-                placeholder="Short title for your complaint"
+                placeholder="Explain briefly why you need leave…"
                 placeholderTextColor={colors.textMuted}
-                className="mt-1 rounded-2xl px-4 py-3"
-                style={{
-                  borderWidth: 2,
-                  borderColor: colors.border,
-                  color: colors.text,
-                }}
-              />
-              <AppText size="label" muted className="mt-4">
-                Description
-              </AppText>
-              <TextInput
-                value={description}
-                onChangeText={setDescription}
                 multiline
-                placeholder="Explain the issue in detail…"
-                placeholderTextColor={colors.textMuted}
+                value={reason}
+                onChangeText={setReason}
                 className="mt-1 rounded-2xl px-4 py-4"
                 style={{
-                  minHeight: 120,
+                  minHeight: 90,
                   borderWidth: 2,
                   borderColor: colors.border,
                   color: colors.text,
                   textAlignVertical: 'top',
                 }}
               />
+              <View className="mt-5 flex-row gap-3">
+                {['single', 'multi'].map((t) => {
+                  const active = mode === t;
+                  return (
+                    <TouchableOpacity
+                      key={t}
+                      onPress={() => setMode(t as any)}
+                      className="flex-1 items-center rounded-xl py-3"
+                      style={{
+                        backgroundColor: active ? colors.primarySoft : colors.bg,
+                        borderWidth: 1,
+                        borderColor: active ? colors.primary : colors.border,
+                      }}>
+                      <AppText semibold primary={active}>
+                        {t === 'single' ? 'Single Day' : 'Multiple Days'}
+                      </AppText>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+              <View className="mt-1">
+                <DatePicker label="From" date={fromDate} onChange={setFromDate} />
+                {mode === 'multi' && <DatePicker label="To" date={toDate} onChange={setToDate} />}
+              </View>
+              <View
+                className="mt-4 rounded-xl border px-5 py-4"
+                style={{
+                  backgroundColor: colors.bg,
+                  borderColor: colors.primary,
+                }}>
+                <View className="flex-row items-center justify-between">
+                  <View>
+                    <AppText size="label" muted primary>
+                      Leave Summary
+                    </AppText>
+                    <AppText size="body" semibold className="mt-1">
+                      {totalDays} Day{totalDays > 1 ? 's' : ''}
+                    </AppText>
+                  </View>
+                </View>
+                <View className="my-2" style={{ height: 1, backgroundColor: colors.border }} />
+                <View className="mt-1 flex-row flex-wrap gap-1">
+                  {daysList.map((day, i) => (
+                    <View
+                      key={i}
+                      className="rounded-full border px-3 py-1.5"
+                      style={{
+                        backgroundColor: colors.bg,
+                        borderColor: colors.border,
+                      }}>
+                      <AppText size="min" semibold>
+                        {day}
+                      </AppText>
+                    </View>
+                  ))}
+                </View>
+                <AppText size="min" muted className="mt-2">
+                  Please review the above details before submitting your leave request.
+                </AppText>
+              </View>
               <TouchableOpacity
-                onPress={saveComplaint}
+                onPress={saveLeave}
                 className="mt-6 flex-row items-center justify-center gap-2 rounded-2xl py-4"
                 style={{ backgroundColor: colors.primary }}>
-                <ChevronRight size={18} color="#fff" />
+                <ChevronRight size={18} color={'#fff'} />
                 <AppText semibold style={{ color: '#fff' }}>
-                  Submit Complaint
+                  Submit Leave Request
                 </AppText>
               </TouchableOpacity>
             </ScrollView>
           </View>
         </View>
       </Modal>
-
-      <Modal visible={showWithdrawConfirm} transparent statusBarTranslucent animationType="fade">
+      <Modal
+        visible={showWithdrawConfirm}
+        transparent
+        statusBarTranslucent
+        animationType="fade"
+        onRequestClose={() => setShowWithdrawConfirm(false)}>
         <View className="flex-1 items-center justify-center bg-black/80 px-6">
           <View className="w-full rounded-2xl p-6" style={{ backgroundColor: colors.bgCard }}>
             <View
@@ -397,11 +492,20 @@ export default function EmployeeComplaintPage() {
               <AlertTriangle size={26} color={colors.statusAtext} />
             </View>
             <AppText size="title" semibold>
-              Withdraw Complaint?
+              Withdraw Leave?
             </AppText>
             <AppText muted className="mt-1">
-              Are you sure you want to withdraw this complaint?
+              Are you sure you want to withdraw this leave request? This action cannot be undone.
             </AppText>
+            <View className="mt-4 rounded-2xl p-4" style={{ backgroundColor: colors.bg }}>
+              <AppText semibold>
+                {withdrawLeave?.from}
+                {withdrawLeave?.to ? ` → ${withdrawLeave.to}` : ''}
+              </AppText>
+              <AppText size="min" muted>
+                {withdrawLeave?.days} day(s)
+              </AppText>
+            </View>
             <View className="mt-6 flex-row gap-3">
               <TouchableOpacity
                 onPress={() => setShowWithdrawConfirm(false)}
@@ -428,16 +532,16 @@ export default function EmployeeComplaintPage() {
 function SummaryItem({ label, value, variant }: any) {
   const { colors } = useTheme();
   const ui =
-    variant === 'solved'
+    variant === 'approved'
       ? {
           bg: colors.statusPbg,
           text: colors.statusPtext,
           border: colors.statusPborder,
         }
       : {
-          bg: colors.statusLbg,
-          text: colors.statusLtext,
-          border: colors.statusLborder,
+          bg: colors.statusAbg,
+          text: colors.statusAtext,
+          border: colors.statusAborder,
         };
   return (
     <View
@@ -446,12 +550,40 @@ function SummaryItem({ label, value, variant }: any) {
         backgroundColor: colors.bg,
         borderColor: colors.border,
       }}>
-      <AppText size="min" semibold className="uppercase">
+      <AppText size="min" semibold>
         {label}
       </AppText>
-      <AppText size="title" semibold style={{ color: variant == 'solved' ? 'green' : 'red' }}>
+      <AppText size="title" semibold style={{ color: variant == 'approved' ? 'green' : 'red' }}>
         {value == 0 ? value : value.toString().padStart(2, '0')}
       </AppText>
+    </View>
+  );
+}
+
+function DatePicker({ label, date, onChange }: any) {
+  const { colors } = useTheme();
+
+  const open = () => {
+    if (Platform.OS === 'android') {
+      DateTimePickerAndroid.open({
+        value: date || new Date(),
+        mode: 'date',
+        onChange: (_, d) => d && onChange(d),
+      });
+    }
+  };
+
+  return (
+    <View className="mt-3">
+      <AppText size="label" muted>
+        {label} Date
+      </AppText>
+      <TouchableOpacity
+        onPress={open}
+        className="mt-1 rounded-xl px-4 py-3"
+        style={{ borderWidth: 2, borderColor: colors.border }}>
+        <AppText semibold>{date ? formatDMY(date) : 'Select date'}</AppText>
+      </TouchableOpacity>
     </View>
   );
 }

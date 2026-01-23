@@ -11,6 +11,7 @@ import {
   AlertTriangle,
   ChevronRight,
   ChevronRightCircle,
+  CircleOff,
   CircleX,
   Plus,
   Trash2,
@@ -26,7 +27,7 @@ const formatDMY = (d: Date) => {
   return `${day} ${month} ${year}`;
 };
 
-export default function EmployeeComplaintPage() {
+export default function StudentComplaintPage() {
   const { schoolUser } = useAuth();
   const { colors } = useTheme();
   const [sessions, setSessions] = useState<any[]>([]);
@@ -84,13 +85,20 @@ export default function EmployeeComplaintPage() {
         schoolUser.schoolId,
         'branches',
         schoolUser.currentBranch,
-        'employees',
+        'students',
         schoolUser.uid,
         'complaint',
         session
       );
       const snap = await getDoc(ref);
-      setComplaints(snap.exists() ? snap.data().items || [] : []);
+      const sorted = snap.exists()
+        ? snap
+            .data()
+            .items.sort(
+              (a: any, b: any) => b.createdAt.toDate().getTime() - a.createdAt.toDate().getTime()
+            ) || []
+        : [];
+      setComplaints(sorted);
     } finally {
       setLoading(false);
     }
@@ -122,12 +130,12 @@ export default function EmployeeComplaintPage() {
     setLoading(true);
     try {
       await secureAxios.post('/api/school/complaint/create', {
-        type: 'employee',
+        type: 'student',
         branch: schoolUser.currentBranch,
         session,
         title,
         description,
-        appId: schoolUser.employeeId,
+        appId: schoolUser.appId,
       });
       Toast.show({
         type: 'success',
@@ -153,7 +161,7 @@ export default function EmployeeComplaintPage() {
     try {
       setLoading(true);
       await secureAxios.post('/api/school/complaint/withdraw', {
-        type: 'employee',
+        type: 'student',
         branch: schoolUser.currentBranch,
         session,
         complaintId: withdrawItem.id,
@@ -248,8 +256,14 @@ export default function EmployeeComplaintPage() {
 
         <View className="mt-5 px-5">
           {complaints.length === 0 ? (
-            <View className="items-center py-20">
-              <AppText muted>No complaints found</AppText>
+            <View className="items-center px-10 py-12">
+              <CircleOff size={32} color={colors.primary} />
+              <AppText semibold className="mt-5">
+                No Complaint found!
+              </AppText>
+              <AppText size="subtext" muted semibold className="text-center">
+                If something’s bothering you, we’re here to listen!
+              </AppText>
             </View>
           ) : (
             complaints.map((c) => {
