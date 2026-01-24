@@ -72,7 +72,7 @@ export default function EmployeeAssignmentPage() {
   }, []);
 
   async function searchAssignments(session: any) {
-    if (!session || !classId || !sectionId) {
+    if (!session || !schoolUser.className || !schoolUser.section) {
       Toast.show({
         type: 'error',
         text1: 'Missing filters',
@@ -91,7 +91,7 @@ export default function EmployeeAssignmentPage() {
         'learning',
         'items',
         'assignments',
-        `${classId}_${sectionId}_${session}`
+        `${schoolUser.className}_${schoolUser.section}_${session}`
       );
       const snap = await getDoc(ref);
       setAssignments(snap.exists() ? snap.data().items || [] : []);
