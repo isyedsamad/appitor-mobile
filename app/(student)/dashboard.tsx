@@ -249,7 +249,7 @@ export default function EmployeeDashboard() {
               label="Fee Portal"
               description="monthly fee details and history"
               helper="Accounts"
-              onPress={() => router.push('/(employee)/attendance')}
+              onPress={() => router.push('/(student)/fees')}
             />
             <BigAction
               icon={<FileText size={24} color={colors.primary} />}

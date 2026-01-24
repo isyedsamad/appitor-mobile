@@ -180,6 +180,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           uid: firebaseUser.uid,
           currentSession: schoolData.currentSession,
           schoolName: schoolData.name,
+          schoolAddress: `${schoolData.city ? `${schoolData.city}, ` : ''} ${schoolData.state ? `${schoolData.state}` : ''}`,
           schoolCode: schoolData.code,
           roleId: userData.roleId,
           roleName: userData.role?.toLowerCase(),
