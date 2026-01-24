@@ -313,7 +313,7 @@ export default function EmployeeDashboard() {
               <PortalItem
                 icon={<GraduationCap size={24} color={colors.primary} />}
                 label="Exam Portal"
-                onPress={() => router.push('/(employee)/exams')}
+                onPress={() => router.push('/(student)/exams')}
               />
               <PortalItem
                 icon={<Users size={24} color={colors.primary} />}

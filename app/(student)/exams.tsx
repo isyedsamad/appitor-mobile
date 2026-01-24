@@ -1,3 +1,9 @@
+import { useRouter } from 'expo-router';
+import { collection, doc, getDoc, getDocs, orderBy, query, where } from 'firebase/firestore';
+import { CalendarRange, ChevronRight, ClipboardCheck, Lock } from 'lucide-react-native';
+import { useEffect, useMemo, useState } from 'react';
+import { ScrollView, TouchableOpacity, View } from 'react-native';
+
 import { Header } from '@/components/employee/Header';
 import { AppText } from '@/components/ui/AppText';
 import Loading from '@/components/ui/Loading';
@@ -5,12 +11,6 @@ import { Screen } from '@/components/ui/Screen';
 import { useAuth } from '@/context/AuthContext';
 import { useTheme } from '@/context/ThemeContext';
 import { db } from '@/lib/firebase';
-import { router } from 'expo-router';
-import { collection, doc, getDoc, getDocs, orderBy, query, where } from 'firebase/firestore';
-import { CalendarRange, ClipboardList } from 'lucide-react-native';
-import { useEffect, useMemo, useState } from 'react';
-import { ScrollView, TouchableOpacity, View } from 'react-native';
-import Toast from 'react-native-toast-message';
 
 function getExamStatus(start: string, end: string) {
   const today = new Date();
@@ -21,38 +21,25 @@ function getExamStatus(start: string, end: string) {
   return 'completed';
 }
 
-function formatDate(date: string) {
-  return new Date(date).toLocaleDateString('en-IN', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-  });
-}
-
-export default function EmployeeExamsPage() {
+export default function StudentExamPortal() {
+  const router = useRouter();
   const { schoolUser } = useAuth();
   const { colors } = useTheme();
+
+  const [loading, setLoading] = useState(true);
   const [sessions, setSessions] = useState<any[]>([]);
   const [session, setSession] = useState('');
   const [exams, setExams] = useState<any[]>([]);
-  const [loading, setLoading] = useState(false);
+
   useEffect(() => {
     async function loadSessions() {
-      setLoading(true);
       try {
         const ref = doc(db, 'schools', schoolUser.schoolId, 'settings', 'academic');
         const snap = await getDoc(ref);
         if (!snap.exists()) return;
         const list = snap.data().sessions;
-        const current = snap.data().currentSession;
         setSessions(list);
-        setSession(current || list[0]?.id);
-      } catch (err) {
-        Toast.show({
-          type: 'error',
-          text1: 'Failed to load sessions',
-          text2: 'Error: ' + err,
-        });
+        setSession(schoolUser.currentSession);
       } finally {
         setLoading(false);
       }
@@ -81,16 +68,11 @@ export default function EmployeeExamsPage() {
         );
         const snap = await getDocs(q);
         setExams(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
-      } catch (err: any) {
-        Toast.show({
-          type: 'error',
-          text1: 'Failed to load exams',
-          text2: String(err),
-        });
       } finally {
         setLoading(false);
       }
     }
+
     loadExams();
   }, [session]);
 
@@ -132,18 +114,17 @@ export default function EmployeeExamsPage() {
             );
           })}
         </ScrollView>
-        <View className="mx-5 mt-4 flex-row gap-2">
+        <View className="mx-5 mt-5 flex-row gap-2">
           <Stat label="Total Exams" value={counts.total} />
           <Stat label="Active" value={counts.active} accent="primary" />
           <Stat label="Upcoming" value={counts.upcoming} accent="warning" />
         </View>
         <View className="mt-4 px-5">
           {exams.length === 0 ? (
-            <View className="items-center py-20">
-              <AppText muted>No exams found for this session</AppText>
-            </View>
+            <EmptyState />
           ) : (
             exams.map((exam) => {
+              const declared = exam.resultDeclared === true;
               const status = getExamStatus(exam.startDate, exam.endDate);
               const statusColor =
                 status === 'active'
@@ -157,52 +138,73 @@ export default function EmployeeExamsPage() {
                   : status === 'upcoming'
                     ? colors.statusLbg
                     : colors.bg;
-
               return (
                 <TouchableOpacity
                   key={exam.id}
+                  disabled={!declared}
                   onPress={() =>
                     router.push({
-                      pathname: '/(employee)/exams/[termId]/marks',
-                      params: { termId: exam.id },
+                      pathname: '/(student)/exams/[termId]/marks',
+                      params: { termId: exam.id, termName: exam.name },
                     })
                   }
-                  className="mb-4 rounded-2xl p-5"
+                  className="mb-4 rounded-2xl border p-5"
                   style={{
                     backgroundColor: colors.bgCard,
-                    borderWidth: 1,
                     borderColor: colors.border,
-                  }}
-                  activeOpacity={0.85}>
-                  <View className="flex-row items-start justify-between">
-                    <View className="flex-1 pr-3">
-                      <AppText size="title" semibold>
-                        {exam.name}
-                      </AppText>
-                      <AppText size="subtext" muted>
-                        Exam Term
+                  }}>
+                  <View className="flex-row items-center justify-between">
+                    <View className="flex-row items-center gap-3">
+                      <View
+                        className="h-10 w-10 items-center justify-center rounded-xl"
+                        style={{ backgroundColor: colors.primarySoft }}>
+                        <ClipboardCheck size={20} color={colors.primary} />
+                      </View>
+                      <View>
+                        <AppText semibold>{exam.name}</AppText>
+                        <AppText size="min" muted>
+                          Exam Term
+                        </AppText>
+                      </View>
+                    </View>
+                    {declared ? (
+                      <ChevronRight size={20} color={colors.textMuted} />
+                    ) : (
+                      <Lock size={18} color={colors.textMuted} />
+                    )}
+                  </View>
+                  <View className="mt-3 flex-row items-center gap-2">
+                    <CalendarRange size={15} color={colors.textMuted} />
+                    <AppText size="min" muted>
+                      {formatDate(exam.startDate)} → {formatDate(exam.endDate)}
+                    </AppText>
+                  </View>
+                  <View className="mt-4 flex-row items-center justify-between">
+                    <View
+                      className="rounded-lg px-3 py-1"
+                      style={{
+                        backgroundColor: declared ? colors.statusPbg : colors.statusLbg,
+                      }}>
+                      <AppText
+                        size="min"
+                        semibold
+                        style={{
+                          color: declared ? colors.statusPtext : colors.statusLtext,
+                        }}>
+                        {declared ? 'Result Available' : 'Result Pending'}
                       </AppText>
                     </View>
-                    <View className="rounded-full px-3 py-1" style={{ backgroundColor: statusBg }}>
+                    <View
+                      className="rounded-full px-3 py-1"
+                      style={{
+                        backgroundColor: statusBg,
+                        borderWidth: 1,
+                        borderColor: statusColor,
+                      }}>
                       <AppText size="min" semibold style={{ color: statusColor }}>
                         {status.toUpperCase()}
                       </AppText>
                     </View>
-                  </View>
-                  <View className="mt-3 flex-row items-center gap-2">
-                    <CalendarRange size={16} color={colors.textMuted} />
-                    <AppText size="min" muted semibold>
-                      {formatDate(exam.startDate)} → {formatDate(exam.endDate)}
-                    </AppText>
-                  </View>
-
-                  <View
-                    className="mt-4 flex-row items-center gap-2 border-t pt-3"
-                    style={{ borderColor: colors.border }}>
-                    <ClipboardList size={14} color={colors.primary} />
-                    <AppText size="label" semibold primary>
-                      Enter / View Marks
-                    </AppText>
                   </View>
                 </TouchableOpacity>
               );
@@ -212,6 +214,39 @@ export default function EmployeeExamsPage() {
       </ScrollView>
     </Screen>
   );
+}
+
+function EmptyState() {
+  const { colors } = useTheme();
+  return (
+    <View
+      className="items-center rounded-2xl border p-6"
+      style={{
+        backgroundColor: colors.bgCard,
+        borderColor: colors.border,
+      }}>
+      <View
+        className="mb-4 h-14 w-14 items-center justify-center rounded-full"
+        style={{ backgroundColor: colors.primarySoft }}>
+        <ClipboardCheck size={26} color={colors.primary} />
+      </View>
+      <AppText size="title" semibold className="text-center">
+        No Exams Found
+      </AppText>
+      <AppText size="subtext" muted className="mt-2 text-center" style={{ lineHeight: 20 }}>
+        Exams for this session will appear here once they are created by the school.
+      </AppText>
+    </View>
+  );
+}
+
+function formatDate(d: any) {
+  if (!d) return '-';
+  return new Date(d).toLocaleDateString('en-IN', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+  });
 }
 
 function Stat({ label, value, accent }: any) {
