@@ -1,9 +1,9 @@
 import { AuthProvider } from '@/context/AuthContext';
-import { ThemeProvider } from "@/context/ThemeContext";
+import { ThemeProvider } from '@/context/ThemeContext';
 import { toastConfig } from '@/lib/toastConfig';
-import { Stack } from "expo-router";
+import { Stack } from 'expo-router';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import Toast from "react-native-toast-message";
+import Toast from 'react-native-toast-message';
 import '../global.css';
 
 export default function RootLayout() {
@@ -17,6 +17,7 @@ export default function RootLayout() {
             <Stack.Screen name="login" />
             <Stack.Screen name="(student)/dashboard" />
             <Stack.Screen name="(employee)/dashboard" />
+            <Stack.Screen name="/(student)/exams" />
           </Stack>
         </AuthProvider>
       </ThemeProvider>

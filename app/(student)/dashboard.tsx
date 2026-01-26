@@ -317,8 +317,8 @@ export default function EmployeeDashboard() {
               />
               <PortalItem
                 icon={<Users size={24} color={colors.primary} />}
-                label="Students"
-                onPress={() => router.push('/(employee)/students')}
+                label="Employee"
+                onPress={() => router.push('/(student)/employees')}
               />
               <PortalItem
                 icon={<AlarmClock size={24} color={colors.primary} />}

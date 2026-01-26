@@ -121,6 +121,7 @@ export default function StudentProfilePage() {
             </View>
           </View>
           <InfoCard title="Academic Information">
+            <InfoRow label="App ID" value={schoolUser.appId || '-'} />
             <InfoRow
               label="Class and Section"
               value={`${getClassName(schoolUser.className)} - ${getSection(schoolUser.className, schoolUser.section)}`}
@@ -131,7 +132,7 @@ export default function StudentProfilePage() {
             />
           </InfoCard>
           <InfoCard title="Personal Information">
-            <InfoRow label="App ID" value={schoolUser.appId || '-'} />
+            <InfoRow label="DOB" value={schoolUser.dob || '-'} />
             <InfoRow label="Mobile" value={schoolUser.mobile || '-'} />
             <InfoRow label="Gender" value={schoolUser.gender || '-'} />
           </InfoCard>
