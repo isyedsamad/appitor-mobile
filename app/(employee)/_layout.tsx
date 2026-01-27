@@ -6,7 +6,7 @@ export default function EmployeeLayout() {
 
   if (!isLoaded) return <Stack screenOptions={{ headerShown: false }} />;
 
-  if ((!schoolUser || schoolUser.roleId !== 'teacher') && isLoaded) {
+  if ((!schoolUser || schoolUser.roleName !== 'teacher') && isLoaded) {
     return <Redirect href="/welcome" />;
   }
 
