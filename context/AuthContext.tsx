@@ -1,5 +1,13 @@
 import { auth, db } from '@/lib/firebase';
+import {
+  getAccounts,
+  getActiveUID,
+  removeAccount,
+  setActiveUID,
+  updateAccountProfile,
+} from '@/lib/localAccounts';
 import { logout, subscribeToAuthChanges } from '@/services/auth.service';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
 import { signOut } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
@@ -17,12 +25,17 @@ type AuthContextType = {
   handleSwitch: any;
   sessionAttData: any;
   attendance: any;
+  authState: any;
+  setAuthState: any;
 };
+
+type AuthState = 'loading' | 'logged-out' | 'switch-required' | 'ready';
 
 const AuthContext = createContext<AuthContextType | null>(null);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const [schoolUser, setSchoolUser] = useState(null as any);
+  const [authState, setAuthState] = useState<AuthState>('loading');
   const [sessionAttData, setSessionAttData] = useState(null as any);
   const [classData, setClassData] = useState(null);
   const [subjectData, setSubjectData] = useState(null);
@@ -30,30 +43,67 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [attendance, setAttendance] = useState<any>(null);
   const [isLoaded, setIsLoaded] = useState(false);
-  async function handleSignOut() {
-    try {
-      await signOut(auth);
-    } catch (error) {
-      Toast.show({
-        type: 'error',
-        text1: 'Failed to SignOut',
-        text2: 'Error: ' + error,
-      });
-      console.error('Error signing out:', error);
-    }
-  }
+  // async function handleSignOut() {
+  //   try {
+  //     await signOut(auth);
+  //   } catch (error) {
+  //     Toast.show({
+  //       type: 'error',
+  //       text1: 'Failed to SignOut',
+  //       text2: 'Error: ' + error,
+  //     });
+  //     console.error('Error signing out:', error);
+  //   }
+  // }
+  // async function handleSwitch() {
+  //   try {
+  //     await signOut(auth);
+  //   } catch (error) {
+  //     Toast.show({
+  //       type: 'error',
+  //       text1: 'Failed to SignOut',
+  //       text2: 'Error: ' + error,
+  //     });
+  //     console.error('Error signing out:', error);
+  //   }
+  // }
   async function handleSwitch() {
     try {
-      await signOut(auth);
+      await AsyncStorage.removeItem('APPITOR_ACTIVE_UID');
+      setAuthState('switch-required');
+      router.replace('/switch');
     } catch (error) {
       Toast.show({
         type: 'error',
-        text1: 'Failed to SignOut',
-        text2: 'Error: ' + error,
+        text1: 'Failed to Switch Account',
+        text2: String(error),
       });
-      console.error('Error signing out:', error);
+      console.error('Switch error:', error);
     }
   }
+  async function handleSignOut(activeUID: any) {
+    try {
+      await removeAccount(activeUID);
+      setAuthState('switch-required');
+      const accounts = await getAccounts();
+      if (accounts.length > 0) {
+        const next = accounts[0];
+        await setActiveUID(next.uid);
+        router.replace('/switch');
+      } else {
+        await AsyncStorage.removeItem('APPITOR_ACTIVE_UID');
+        await signOut(auth);
+      }
+    } catch (error) {
+      Toast.show({
+        type: 'error',
+        text1: 'Failed to Sign Out',
+        text2: String(error),
+      });
+      console.error('Logout error:', error);
+    }
+  }
+
   const loadClasses = async (schoolId: any, branch: any) => {
     if (!branch) return;
     setLoading(true);
@@ -122,6 +172,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setSessionAttData(snap.exists() ? snap.data() : null);
   }
   const loadAttendanceStudent = async (
+    uid: any,
     className: any,
     section: any,
     schoolId: any,
@@ -139,7 +190,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setAttendance(null);
       } else {
         const data: any = snap.data();
-        const status = data.records?.[schoolUser.uid] ?? null;
+        const status = data.records?.[uid] ?? null;
         setAttendance({
           date: data.date,
           status,
@@ -185,42 +236,65 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setLoading(true);
       setIsLoaded(false);
       if (!firebaseUser) {
+        const accounts = await getAccounts();
         setSchoolUser(null);
+        setAuthState(accounts.length > 0 ? 'switch-required' : 'logged-out');
         setLoading(false);
         setIsLoaded(true);
         return;
       }
       try {
-        const userSnap = await getDoc(doc(db, 'schoolUsers', firebaseUser.uid));
+        var activeUID = await getActiveUID();
+        // if (!currentActiveUID) {
+        //   setAuthState('switch-required');
+        //   setSchoolUser(null);
+        //   return;
+        // }
+        if (!activeUID) {
+          activeUID = firebaseUser.uid;
+          await setActiveUID(firebaseUser.uid);
+        }
+        // const activeUID = await getActiveUID();
+        // if (!activeUID || activeUID !== firebaseUser.uid) {
+        //   setSchoolUser(null);
+        //   setAuthState('switch-required');
+        //   return;
+        // }
+        const userSnap = await getDoc(doc(db, 'schoolUsers', activeUID));
         if (!userSnap.exists()) {
-          setSchoolUser(null);
           await logout();
+          setSchoolUser(null);
+          setAuthState('logged-out');
           return;
         }
         const userData = userSnap.data();
         if (userData.status == 'disabled') {
-          setSchoolUser(null);
           await logout();
+          setSchoolUser(null);
+          setAuthState('logged-out');
           return;
         }
         const schoolSnap = await getDoc(doc(db, 'schools', userData.schoolId));
         if (!schoolSnap.exists()) {
-          setSchoolUser(null);
           await logout();
+          setSchoolUser(null);
+          setAuthState('logged-out');
           return;
         }
         const schoolData = schoolSnap.data();
         if (schoolData.status != 'active') {
-          setSchoolUser(null);
           await logout();
+          setSchoolUser(null);
+          setAuthState('logged-out');
           return;
         }
         let roleData = null;
         if (userData.roleId != 'student') {
           const roleSnap = await getDoc(doc(db, 'roles', userData.roleId));
           if (!roleSnap.exists()) {
-            setSchoolUser(null);
             await logout();
+            setSchoolUser(null);
+            setAuthState('logged-out');
             return;
           }
           roleData = roleSnap.data();
@@ -228,25 +302,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         await loadClasses(userData.schoolId, userData.currentBranch);
         await loadSubjects(userData.schoolId, userData.currentBranch);
         await loadEmployee(userData.schoolId, userData.currentBranch);
-        if (userData.roleId == 'student')
+        if (userData.roleId == 'student') {
+          await loadSessionAttendanceData(
+            userData.schoolId,
+            userData.currentBranch,
+            activeUID,
+            schoolData.currentSession
+          );
           await loadAttendanceStudent(
+            activeUID,
             userData.className,
             userData.section,
             userData.schoolId,
             userData.currentBranch
           );
-        else await loadAttendanceEmployee(userData.uid, userData.schoolId, userData.currentBranch);
-        if (userData.roleId == 'student') {
-          await loadSessionAttendanceData(
-            userData.schoolId,
-            userData.currentBranch,
-            userData.uid,
-            schoolData.currentSession
-          );
-        }
+        } else await loadAttendanceEmployee(activeUID, userData.schoolId, userData.currentBranch);
+        await updateAccountProfile(activeUID, {
+          name: userData.name,
+          role: userData.role?.toLowerCase(),
+          roleName: userData.role?.toLowerCase(),
+          appId: userData.roleId === 'student' ? userData.appId : userData.employeeId,
+        });
         setSchoolUser({
           ...userData,
-          uid: firebaseUser.uid,
+          uid: activeUID,
           currentSession: schoolData.currentSession,
           schoolName: schoolData.name,
           schoolAddress: `${schoolData.city ? `${schoolData.city}, ` : ''} ${schoolData.state ? `${schoolData.state}` : ''}`,
@@ -255,6 +334,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           roleName: userData.role?.toLowerCase(),
           permissions: roleData ? roleData.permissions || [] : [],
         });
+        setAuthState('ready');
       } catch (error) {
         console.log('Failed AuthContext: ' + error);
       } finally {
@@ -268,6 +348,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     <AuthContext.Provider
       value={{
         schoolUser,
+        authState,
+        setAuthState,
         loading,
         isLoaded,
         classData,

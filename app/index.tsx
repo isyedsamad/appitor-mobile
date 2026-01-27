@@ -10,7 +10,7 @@ import { ActivityIndicator, Image, Platform } from 'react-native';
 
 export default function SplashScreen() {
   const router = useRouter();
-  const { schoolUser, loading, isLoaded } = useAuth();
+  const { schoolUser, loading, isLoaded, authState } = useAuth();
   const { theme, colors } = useTheme();
   useEffect(() => {
     if (Platform.OS === 'android') {
@@ -20,22 +20,26 @@ export default function SplashScreen() {
   }, [colors.bg, theme]);
   useEffect(() => {
     if (!isLoaded) return;
-    if (!schoolUser) {
+    if (authState === 'loading') return;
+    if (authState === 'logged-out') {
       router.replace('/welcome');
       return;
-      // const timer = setTimeout(() => {
-      //   router.replace("/welcome");
-      // }, 2000);
-      // return () => clearTimeout(timer);
     }
-    if (schoolUser.roleName === 'teacher') {
-      router.replace('/(employee)/dashboard');
-    } else if (schoolUser.roleName === 'student') {
-      router.replace('/(student)/dashboard');
-    } else {
-      router.replace('/welcome');
+    if (authState === 'switch-required') {
+      router.replace('/switch');
+      return;
     }
-  }, [schoolUser, isLoaded]);
+    if (authState === 'ready' && schoolUser) {
+      if (schoolUser.roleName === 'teacher') {
+        router.replace('/(employee)/dashboard');
+      } else if (schoolUser.roleName === 'student') {
+        router.replace('/(student)/dashboard');
+      } else {
+        router.replace('/welcome');
+      }
+    }
+  }, [authState, isLoaded, schoolUser]);
+
   return (
     <>
       <StatusBar style={theme == 'light' ? 'dark' : 'light'} backgroundColor={colors.primarySoft} />

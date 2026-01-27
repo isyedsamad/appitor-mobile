@@ -123,18 +123,29 @@ export default function LoginScreen() {
         locations={[0.2, 1]}
         className="flex-1">
         <ScrollView>
-          <View className="items-center px-5 pb-10 pt-14">
-            <Image
-              source={theme === 'light' ? Images.logoblack : Images.logowhite}
-              resizeMode="contain"
-              style={{ width: 96, height: 28 }}
-            />
-            <View className="mt-6 items-center">
-              <AppText size="heading" bold>
-                Welcome back
+          <View className="relative w-full items-center overflow-hidden pb-10 pt-10">
+            <View
+              className="mb-5 items-center justify-center rounded-full border px-6 py-3 shadow-sm"
+              style={{
+                backgroundColor: theme === 'light' ? 'rgba(255,255,255,0.8)' : 'rgba(0,0,0,0.3)',
+                borderColor: theme === 'light' ? 'rgba(0,0,0,0.05)' : 'rgba(255,255,255,0.1)',
+              }}>
+              <Image
+                source={theme === 'light' ? Images.logoblack : Images.logowhite}
+                resizeMode="contain"
+                style={{ width: 70, height: 20, opacity: 0.9 }}
+              />
+            </View>
+            <View className="items-center px-5">
+              <AppText size="heading" className="text-center tracking-tighter">
+                Welcome Back.
               </AppText>
-              <AppText size="subtext" muted>
-                Sign in to continue to Appitor
+              <View
+                className="my-2 h-1 w-8 rounded-full opacity-20"
+                style={{ backgroundColor: colors.text }}
+              />
+              <AppText size="subtext" className="text-center leading-6 opacity-60">
+                Signin to continue to appitor.
               </AppText>
             </View>
           </View>

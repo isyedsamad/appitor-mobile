@@ -13,7 +13,6 @@ import {
   AlarmClock,
   BadgeCheck,
   Bell,
-  BookOpen,
   CalendarCheck,
   CalendarDays,
   ChevronRight,
@@ -21,6 +20,7 @@ import {
   GraduationCap,
   IndianRupee,
   Library,
+  MessageCircle,
   NotebookText,
   Sun,
   Sunrise,
@@ -256,7 +256,7 @@ export default function StudentDashboard() {
               />
               <PortalItem
                 icon={<Users size={24} color={colors.primary} />}
-                label="Employee"
+                label="Faculty"
                 onPress={() => router.push('/(student)/employees')}
               />
               <PortalItem
@@ -274,8 +274,8 @@ export default function StudentDashboard() {
           <Section title="Utilities">
             <PortalGrid>
               <PortalItem
-                icon={<BookOpen size={24} color={colors.primary} />}
-                label="Salary"
+                icon={<MessageCircle size={24} color={colors.primary} />}
+                label="Message"
                 onPress={() => router.push('/(employee)/salary')}
               />
               <PortalItem

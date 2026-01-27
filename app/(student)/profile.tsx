@@ -204,7 +204,12 @@ export default function StudentProfilePage() {
           </InfoCard> */}
           <InfoCard>
             <ActionRow icon={Repeat} label="Switch Account" onPress={handleSwitch} />
-            <ActionRow icon={LogOut} label="Logout" danger onPress={handleSignOut} />
+            <ActionRow
+              icon={LogOut}
+              label="Logout"
+              danger
+              onPress={() => handleSignOut(schoolUser.uid)}
+            />
           </InfoCard>
         </View>
       </ScrollView>
