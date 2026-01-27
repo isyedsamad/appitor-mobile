@@ -226,7 +226,18 @@ export default function StudentTimetablePage() {
             </View>
           </View>
         </View>
-        <View
+        <View className="mx-5 mt-4">
+          <View
+            className="flex-row gap-2 rounded-2xl border p-1"
+            style={{
+              backgroundColor: colors.bgCard,
+              borderColor: colors.border,
+            }}>
+            <FilterTab label="Today" active={view === 'day'} onPress={() => setView('day')} />
+            <FilterTab label="Week" active={view === 'week'} onPress={() => setView('week')} />
+          </View>
+        </View>
+        {/* <View
           className="mx-6 mt-4 rounded-full"
           style={{
             backgroundColor: colors.bgCard,
@@ -274,7 +285,7 @@ export default function StudentTimetablePage() {
               );
             })}
           </View>
-        </View>
+        </View> */}
         {view === 'week' && (
           <ScrollView
             horizontal
@@ -364,5 +375,26 @@ function PeriodCard({ slot, timeline }: any) {
         </AppText>
       </View>
     </View>
+  );
+}
+
+function FilterTab({ label, active, onPress }: any) {
+  const { colors } = useTheme();
+  return (
+    <TouchableOpacity
+      onPress={onPress}
+      className="flex-1 items-center rounded-xl py-3"
+      style={{
+        backgroundColor: active ? colors.primarySoft : 'transparent',
+      }}>
+      <AppText
+        size="label"
+        semibold
+        style={{
+          color: active ? colors.primary : colors.textMuted,
+        }}>
+        {label}
+      </AppText>
+    </TouchableOpacity>
   );
 }

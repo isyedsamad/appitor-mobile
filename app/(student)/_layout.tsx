@@ -1,13 +1,14 @@
 import { useAuth } from '@/context/AuthContext';
-import { Redirect, Slot } from 'expo-router';
+import { Redirect, Stack } from 'expo-router';
 
-export default function EmployeeLayout() {
+export default function StudentLayout() {
   const { schoolUser, isLoaded } = useAuth();
 
-  if (!isLoaded) return <Slot />;
+  if (!isLoaded) return <Stack screenOptions={{ headerShown: false }} />;
+
   if ((!schoolUser || schoolUser.roleId !== 'student') && isLoaded) {
     return <Redirect href="/welcome" />;
   }
 
-  return <Slot />;
+  return <Stack screenOptions={{ headerShown: false }} />;
 }

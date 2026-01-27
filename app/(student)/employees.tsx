@@ -3,15 +3,16 @@ import { AppText } from '@/components/ui/AppText';
 import { Screen } from '@/components/ui/Screen';
 import { useAuth } from '@/context/AuthContext';
 import { useTheme } from '@/context/ThemeContext';
-import { Phone, Search, Users } from 'lucide-react-native';
+import { CircleOff, Phone, Search } from 'lucide-react-native';
 import { useMemo, useState } from 'react';
 import { FlatList, Linking, TextInput, TouchableOpacity, View } from 'react-native';
+import Toast from 'react-native-toast-message';
 
 type RoleFilter = 'all' | 'teaching' | 'non-teaching';
 export default function StudentEmployeesPage() {
   const { employeeData } = useAuth();
   const { colors } = useTheme();
-  const [roleFilter, setRoleFilter] = useState<RoleFilter>('all');
+  const [roleFilter, setRoleFilter] = useState<RoleFilter>('teaching');
   const [search, setSearch] = useState('');
   const filteredEmployees = useMemo(() => {
     let list = [...(employeeData || [])];
@@ -32,6 +33,12 @@ export default function StudentEmployeesPage() {
   }, [employeeData, roleFilter, search]);
 
   function callEmployee(mobile: string) {
+    if (!mobile)
+      Toast.show({
+        type: 'error',
+        text1: 'Mobile Number not found!',
+        text2: 'This employee has no phone number assigned by the school.',
+      });
     Linking.openURL(`tel:${mobile}`);
   }
 
@@ -40,7 +47,7 @@ export default function StudentEmployeesPage() {
       <Header title="Faculty Directory" />
       <View className="mt-5 px-5">
         <View
-          className="flex-row items-center rounded-2xl border px-4 py-3"
+          className="flex-row items-center rounded-xl border px-5 py-2"
           style={{
             backgroundColor: colors.bgCard,
             borderColor: colors.border,
@@ -56,18 +63,13 @@ export default function StudentEmployeesPage() {
           />
         </View>
       </View>
-      <View className="mt-3 px-5">
+      <View className="mt-4 px-5">
         <View
           className="flex-row gap-2 rounded-2xl border p-1"
           style={{
             backgroundColor: colors.bgCard,
             borderColor: colors.border,
           }}>
-          <FilterTab
-            label="All"
-            active={roleFilter === 'all'}
-            onPress={() => setRoleFilter('all')}
-          />
           <FilterTab
             label="Teaching"
             active={roleFilter === 'teaching'}
@@ -84,16 +86,19 @@ export default function StudentEmployeesPage() {
         data={filteredEmployees}
         keyExtractor={(item) => item.uid}
         contentContainerStyle={{
-          padding: 20,
+          paddingTop: 15,
+          paddingLeft: 20,
+          paddingRight: 20,
           paddingBottom: 30,
-          gap: 14,
+          gap: 12,
         }}
         ListEmptyComponent={() => (
-          <View className="items-center py-24">
-            <Users size={32} color={colors.textMuted} />
-            <AppText muted className="mt-3">
-              No employees found
+          <View className="items-center px-10 py-12">
+            <CircleOff size={32} color={colors.primary} />
+            <AppText semibold className="mt-5">
+              No Employee Found!
             </AppText>
+            <AppText size="subtext" muted semibold className="text-center"></AppText>
           </View>
         )}
         renderItem={({ item }) => (
@@ -109,11 +114,12 @@ function FilterTab({ label, active, onPress }: any) {
   return (
     <TouchableOpacity
       onPress={onPress}
-      className="flex-1 items-center rounded-xl py-3"
+      className="flex-1 items-center rounded-xl py-2"
       style={{
         backgroundColor: active ? colors.primarySoft : 'transparent',
       }}>
       <AppText
+        size="label"
         semibold
         style={{
           color: active ? colors.primary : colors.textMuted,
@@ -133,6 +139,11 @@ function EmployeeCard({ employee, onCall }: any) {
     .join('')
     .toUpperCase();
 
+  const capitalizeWords = (str: string) => {
+    if (!str) return;
+    return str.replace(/\w\S*/g, (txt) => txt.charAt(0).toUpperCase() + txt.slice(1).toLowerCase());
+  };
+
   const isTeaching = employee.role?.toLowerCase().includes('teacher');
   return (
     <View
@@ -143,19 +154,19 @@ function EmployeeCard({ employee, onCall }: any) {
       }}>
       <View className="flex-row items-center gap-4">
         <View
-          className="h-14 w-14 items-center justify-center rounded-xl"
+          className="h-14 w-12 items-center justify-center rounded-xl"
           style={{ backgroundColor: colors.primarySoft }}>
-          <AppText size="title" semibold primary>
+          <AppText size="body" semibold primary>
             {initials}
           </AppText>
         </View>
         <View className="flex-1">
           <AppText size="body" semibold>
-            {employee.name}
+            {capitalizeWords(employee.name)}
           </AppText>
           <View className="mt-1 flex-row items-center gap-2">
             <RoleChip teaching={isTeaching} />
-            <AppText size="min" muted>
+            <AppText size="min" muted semibold>
               {employee.employeeId}
             </AppText>
           </View>

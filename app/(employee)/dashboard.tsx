@@ -6,16 +6,15 @@ import Loading from '@/components/ui/Loading';
 import { Screen } from '@/components/ui/Screen';
 import { useAuth } from '@/context/AuthContext';
 import { useTheme } from '@/context/ThemeContext';
-import { db } from '@/lib/firebase';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
-import { doc, getDoc } from 'firebase/firestore';
 import type { LucideIcon } from 'lucide-react-native';
 import {
   AlarmClock,
   BadgeCheck,
   Bell,
   BookOpen,
+  CalendarCheck,
   CalendarDays,
   ChevronRight,
   ClipboardCheck,
@@ -34,11 +33,10 @@ import { TouchableOpacity, View } from 'react-native';
 
 export default function EmployeeDashboard() {
   const router = useRouter();
-  const { schoolUser, isLoaded } = useAuth();
+  const { schoolUser, isLoaded, attendance } = useAuth();
   const { colors } = useTheme();
   // const [dashboard, setDashboard] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
-  const [attendance, setAttendance] = useState<any>(null);
+  const [loading, setLoading] = useState(false);
   // useEffect(() => {
   //   if (!schoolUser) return;
   //   const ref = doc(
@@ -58,46 +56,6 @@ export default function EmployeeDashboard() {
   //   });
   // }, [schoolUser]);
   // const teacher = dashboard?.teacher ?? {};
-
-  useEffect(() => {
-    if (!schoolUser) return;
-    const loadAttendance = async () => {
-      try {
-        const today = new Date();
-        const dateStr = `${String(today.getDate()).padStart(2, '0')}-${String(
-          today.getMonth() + 1
-        ).padStart(2, '0')}-${today.getFullYear()}`;
-        const docId = `employee_${dateStr}`;
-        const docRef = doc(
-          db,
-          'schools',
-          schoolUser.schoolId,
-          'branches',
-          schoolUser.currentBranch,
-          'attendance',
-          docId
-        );
-        const snap = await getDoc(docRef);
-        if (!snap.exists()) {
-          setAttendance(null);
-        } else {
-          const data: any = snap.data();
-          const status = data.records?.[schoolUser.uid] ?? null;
-          setAttendance({
-            date: data.date,
-            status,
-            locked: data.locked,
-          });
-        }
-      } catch (error) {
-        console.error('Error loading attendance:', error);
-        setAttendance(null);
-      } finally {
-        setLoading(false);
-      }
-    };
-    loadAttendance();
-  }, [schoolUser]);
 
   const statusKey = attendance?.status ?? 'M';
   const statusMap: any = {
@@ -294,7 +252,7 @@ export default function EmployeeDashboard() {
                 onPress={() => router.push('/(employee)/complaint')}
               />
               <PortalItem
-                icon={<CalendarDays size={24} color={colors.primary} />}
+                icon={<CalendarCheck size={24} color={colors.primary} />}
                 label="Holiday"
                 onPress={() => router.push('/(employee)/holiday')}
               />

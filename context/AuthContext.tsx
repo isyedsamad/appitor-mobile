@@ -16,6 +16,7 @@ type AuthContextType = {
   handleSignOut: any;
   handleSwitch: any;
   sessionAttData: any;
+  attendance: any;
 };
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -27,6 +28,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [subjectData, setSubjectData] = useState(null);
   const [employeeData, setEmployeeData] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [attendance, setAttendance] = useState<any>(null);
   const [isLoaded, setIsLoaded] = useState(false);
   async function handleSignOut() {
     try {
@@ -119,6 +121,65 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const snap = await getDoc(ref);
     setSessionAttData(snap.exists() ? snap.data() : null);
   }
+  const loadAttendanceStudent = async (
+    className: any,
+    section: any,
+    schoolId: any,
+    branch: any
+  ) => {
+    try {
+      const today = new Date();
+      const dateStr = `${String(today.getDate()).padStart(2, '0')}-${String(
+        today.getMonth() + 1
+      ).padStart(2, '0')}-${today.getFullYear()}`;
+      const docId = `student_${dateStr}_${className}_${section}`;
+      const docRef = doc(db, 'schools', schoolId, 'branches', branch, 'attendance', docId);
+      const snap = await getDoc(docRef);
+      if (!snap.exists()) {
+        setAttendance(null);
+      } else {
+        const data: any = snap.data();
+        const status = data.records?.[schoolUser.uid] ?? null;
+        setAttendance({
+          date: data.date,
+          status,
+          locked: data.locked,
+        });
+      }
+    } catch (error) {
+      console.error('Error loading attendance:', error);
+      setAttendance(null);
+    } finally {
+      setLoading(false);
+    }
+  };
+  const loadAttendanceEmployee = async (uid: any, schoolId: any, branch: any) => {
+    try {
+      const today = new Date();
+      const dateStr = `${String(today.getDate()).padStart(2, '0')}-${String(
+        today.getMonth() + 1
+      ).padStart(2, '0')}-${today.getFullYear()}`;
+      const docId = `employee_${dateStr}`;
+      const docRef = doc(db, 'schools', schoolId, 'branches', branch, 'attendance', docId);
+      const snap = await getDoc(docRef);
+      if (!snap.exists()) {
+        setAttendance(null);
+      } else {
+        const data: any = snap.data();
+        const status = data.records?.[uid] ?? null;
+        setAttendance({
+          date: data.date,
+          status,
+          locked: data.locked,
+        });
+      }
+    } catch (error) {
+      console.error('Error loading attendance:', error);
+      setAttendance(null);
+    } finally {
+      setLoading(false);
+    }
+  };
   useEffect(() => {
     const unsub = subscribeToAuthChanges(async (firebaseUser) => {
       setLoading(true);
@@ -167,6 +228,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         await loadClasses(userData.schoolId, userData.currentBranch);
         await loadSubjects(userData.schoolId, userData.currentBranch);
         await loadEmployee(userData.schoolId, userData.currentBranch);
+        if (userData.roleId == 'student')
+          await loadAttendanceStudent(
+            userData.className,
+            userData.section,
+            userData.schoolId,
+            userData.currentBranch
+          );
+        else await loadAttendanceEmployee(userData.uid, userData.schoolId, userData.currentBranch);
         if (userData.roleId == 'student') {
           await loadSessionAttendanceData(
             userData.schoolId,
@@ -207,6 +276,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         handleSignOut,
         handleSwitch,
         sessionAttData,
+        attendance,
       }}>
       {children}
     </AuthContext.Provider>

@@ -27,7 +27,7 @@ export default function HolidayPage() {
   const [sessions, setSessions] = useState<any[]>([]);
   const [session, setSession] = useState('');
   const [holidays, setHolidays] = useState<any[]>([]);
-  const [filter, setFilter] = useState('all');
+  const [filter, setFilter] = useState('upcoming');
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -98,6 +98,8 @@ export default function HolidayPage() {
 
   const filtered = useMemo(() => {
     if (filter === 'all') return holidays;
+    if (filter == 'upcoming')
+      return holidays.filter((h) => h.status === filter || h.status === 'ongoing');
     return holidays.filter((h) => h.status === filter);
   }, [holidays, filter]);
 
@@ -151,8 +153,22 @@ export default function HolidayPage() {
             </View>
           </View>
         )}
-        <View className="mt-5 flex-row gap-2 px-5">
-          {STATUS_FILTERS.map((f) => {
+        <View className="mx-5 mt-5">
+          <View
+            className="flex-row gap-2 rounded-2xl border p-1"
+            style={{
+              backgroundColor: colors.bgCard,
+              borderColor: colors.border,
+            }}>
+            <FilterTab label="All" active={filter === 'all'} onPress={() => setFilter('all')} />
+            <FilterTab
+              label="Ongoing/Upcoming"
+              active={filter === 'upcoming'}
+              onPress={() => setFilter('upcoming')}
+            />
+            <FilterTab label="Past" active={filter === 'past'} onPress={() => setFilter('past')} />
+          </View>
+          {/* {STATUS_FILTERS.map((f) => {
             const active = filter === f;
             return (
               <TouchableOpacity
@@ -169,7 +185,7 @@ export default function HolidayPage() {
                 </AppText>
               </TouchableOpacity>
             );
-          })}
+          })} */}
         </View>
         <View className="mt-4 px-5">
           {filtered.length === 0 ? (
@@ -276,5 +292,26 @@ function HolidayCard({ holiday }: any) {
         )}
       </View>
     </View>
+  );
+}
+
+function FilterTab({ label, active, onPress }: any) {
+  const { colors } = useTheme();
+  return (
+    <TouchableOpacity
+      onPress={onPress}
+      className={`items-center rounded-xl py-3 ${label == 'Ongoing/Upcoming' ? 'flex-1' : 'w-20'}`}
+      style={{
+        backgroundColor: active ? colors.primarySoft : 'transparent',
+      }}>
+      <AppText
+        size="label"
+        semibold
+        style={{
+          color: active ? colors.primary : colors.textMuted,
+        }}>
+        {label}
+      </AppText>
+    </TouchableOpacity>
   );
 }

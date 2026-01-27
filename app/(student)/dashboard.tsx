@@ -6,16 +6,15 @@ import Loading from '@/components/ui/Loading';
 import { Screen } from '@/components/ui/Screen';
 import { useAuth } from '@/context/AuthContext';
 import { useTheme } from '@/context/ThemeContext';
-import { db } from '@/lib/firebase';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
-import { doc, getDoc } from 'firebase/firestore';
 import type { LucideIcon } from 'lucide-react-native';
 import {
   AlarmClock,
   BadgeCheck,
   Bell,
   BookOpen,
+  CalendarCheck,
   CalendarDays,
   ChevronRight,
   FileText,
@@ -29,75 +28,14 @@ import {
   User2,
   Users,
 } from 'lucide-react-native';
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { TouchableOpacity, View } from 'react-native';
 
-export default function EmployeeDashboard() {
+export default function StudentDashboard() {
   const router = useRouter();
-  const { schoolUser, isLoaded, sessionAttData } = useAuth();
+  const { schoolUser, isLoaded, sessionAttData, attendance } = useAuth();
   const { colors } = useTheme();
-  // const [dashboard, setDashboard] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
-  const [attendance, setAttendance] = useState<any>(null);
-  // useEffect(() => {
-  //   if (!schoolUser) return;
-  //   const ref = doc(
-  //     db,
-  //     "schools",
-  //     schoolUser.schoolId,
-  //     "branches",
-  //     schoolUser.currentBranch,
-  //     "employees",
-  //     schoolUser.uid,
-  //     "dashboard",
-  //     "main"
-  //   );
-  //   return onSnapshot(ref, snap => {
-  //     setDashboard(snap.exists() ? snap.data() : null);
-  //     setLoading(false);
-  //   });
-  // }, [schoolUser]);
-  // const teacher = dashboard?.teacher ?? {};
-
-  useEffect(() => {
-    if (!schoolUser) return;
-    const loadAttendance = async () => {
-      try {
-        const today = new Date();
-        const dateStr = `${String(today.getDate()).padStart(2, '0')}-${String(
-          today.getMonth() + 1
-        ).padStart(2, '0')}-${today.getFullYear()}`;
-        const docId = `student_${dateStr}_${schoolUser.className}_${schoolUser.section}`;
-        const docRef = doc(
-          db,
-          'schools',
-          schoolUser.schoolId,
-          'branches',
-          schoolUser.currentBranch,
-          'attendance',
-          docId
-        );
-        const snap = await getDoc(docRef);
-        if (!snap.exists()) {
-          setAttendance(null);
-        } else {
-          const data: any = snap.data();
-          const status = data.records?.[schoolUser.uid] ?? null;
-          setAttendance({
-            date: data.date,
-            status,
-            locked: data.locked,
-          });
-        }
-      } catch (error) {
-        console.error('Error loading attendance:', error);
-        setAttendance(null);
-      } finally {
-        setLoading(false);
-      }
-    };
-    loadAttendance();
-  }, [schoolUser]);
+  const [loading, setLoading] = useState(false);
 
   const statusKey = attendance?.status ?? 'M';
   const statusMap: any = {
@@ -177,17 +115,13 @@ export default function EmployeeDashboard() {
     return { P, A, L, M, total };
   }, [sessionAttData]);
 
-  useEffect(() => {
-    if (!schoolUser && isLoaded) router.replace('/');
-  }, [schoolUser]);
-
   return (
     <>
       {loading && <Loading />}
       <Screen>
         <DashboardHeader
-          schoolName={schoolUser.schoolName}
-          userName={schoolUser.name}
+          schoolName={schoolUser.schoolName || ''}
+          userName={schoolUser.name || ''}
           onNotificationPress={() => router.push('/(employee)/notifications')}
         />
         {/* <View
@@ -235,7 +169,7 @@ export default function EmployeeDashboard() {
               onPress={() => router.push('/(student)/assignment')}
             />
             <Shortcut
-              icon={<CalendarDays size={22} color={colors.primary} />}
+              icon={<CalendarCheck size={22} color={colors.primary} />}
               label="Holiday"
               onPress={() => router.push('/(student)/holiday')}
             />
@@ -311,16 +245,6 @@ export default function EmployeeDashboard() {
                 onPress={() => router.push('/(employee)/online-class')}
               />
               <PortalItem
-                icon={<GraduationCap size={24} color={colors.primary} />}
-                label="Exam Portal"
-                onPress={() => router.push('/(student)/exams')}
-              />
-              <PortalItem
-                icon={<Users size={24} color={colors.primary} />}
-                label="Employee"
-                onPress={() => router.push('/(student)/employees')}
-              />
-              <PortalItem
                 icon={<AlarmClock size={24} color={colors.primary} />}
                 label="My Attendance"
                 onPress={() => router.push('/(student)/my-attendance')}
@@ -329,6 +253,16 @@ export default function EmployeeDashboard() {
                 icon={<CalendarDays size={24} color={colors.primary} />}
                 label="Timetable"
                 onPress={() => router.push('/(student)/timetable')}
+              />
+              <PortalItem
+                icon={<Users size={24} color={colors.primary} />}
+                label="Employee"
+                onPress={() => router.push('/(student)/employees')}
+              />
+              <PortalItem
+                icon={<GraduationCap size={24} color={colors.primary} />}
+                label="Exam Portal"
+                onPress={() => router.push('/(student)/exams')}
               />
               <PortalItem
                 icon={<BadgeCheck size={24} color={colors.primary} />}
@@ -355,7 +289,7 @@ export default function EmployeeDashboard() {
                 onPress={() => router.push('/(student)/complaint')}
               />
               <PortalItem
-                icon={<CalendarDays size={24} color={colors.primary} />}
+                icon={<CalendarCheck size={24} color={colors.primary} />}
                 label="Holiday"
                 onPress={() => router.push('/(student)/holiday')}
               />
