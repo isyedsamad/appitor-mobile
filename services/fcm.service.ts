@@ -12,13 +12,10 @@ export async function registerFcmToken(context: {
   sectionId?: string;
 }) {
   const allowed = await requestNotificationPermission();
-  console.log(33333 + ' - ' + allowed);
   if (!allowed) return;
   const token = await getFcmToken();
-  console.log(44444 + ' - ' + token);
   if (!token) return;
   const lastToken = await AsyncStorage.getItem('FCM_TOKEN');
-  console.log(55555 + ' - ' + lastToken);
   if (lastToken === token) return;
   await setDoc(doc(db, 'fcmTokens', token), {
     token,
@@ -32,7 +29,6 @@ export async function registerFcmToken(context: {
     active: true,
     lastSeenAt: serverTimestamp(),
   });
-  console.log(666666);
   await AsyncStorage.setItem('FCM_TOKEN', token);
 }
 

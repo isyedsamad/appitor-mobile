@@ -14,7 +14,6 @@ Notifications.setNotificationHandler({
 
 export async function requestNotificationPermission() {
   const { status } = await Notifications.getPermissionsAsync();
-  console.log(11111 + ' - ' + status);
   if (status !== 'granted') {
     const result = await Notifications.requestPermissionsAsync();
     return result.status === 'granted';
@@ -23,22 +22,21 @@ export async function requestNotificationPermission() {
 }
 
 export async function getFcmToken() {
-  console.log(222223333333 + ' - ' + Device.isDevice + ' - ' + Device.osName);
-  if (Device.osName !== 'Android' || Device.isDevice === false) {
+  const isPhysicalDevice =
+    Device.isDevice === true && (Device.brand !== null || Device.modelName !== null);
+  if (!isPhysicalDevice) {
     console.log('Emulator detected');
     return null;
   }
   try {
     const projectId = Constants.expoConfig?.extra?.eas?.projectId || Constants.expoConfig?.slug;
-    console.log('22222333333 - Project ID:', projectId);
     const token = (
       await Notifications.getExpoPushTokenAsync({
         projectId: projectId,
       })
     ).data;
-    console.log(22222 + ' - ' + token);
     return token;
   } catch (err) {
-    console.log(2222223333 + ' - ' + err);
+    console.log('Token Error: ' + err);
   }
 }
