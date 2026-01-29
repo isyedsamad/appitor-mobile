@@ -1,6 +1,7 @@
 import { Images } from '@/assets/images';
 import { useAuth } from '@/context/AuthContext';
 import { useTheme } from '@/context/ThemeContext';
+import { requestNotificationPermission } from '@/lib/notifications';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as NavigationBar from 'expo-navigation-bar';
 import { useRouter } from 'expo-router';
@@ -18,6 +19,9 @@ export default function SplashScreen() {
       NavigationBar.setButtonStyleAsync(theme === 'dark' ? 'light' : 'dark');
     }
   }, [colors.bg, theme]);
+  useEffect(() => {
+    requestNotificationPermission();
+  }, []);
   useEffect(() => {
     if (!isLoaded) return;
     if (authState === 'loading') return;

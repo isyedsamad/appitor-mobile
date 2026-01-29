@@ -7,6 +7,7 @@ import {
   updateAccountProfile,
 } from '@/lib/localAccounts';
 import { logout, subscribeToAuthChanges } from '@/services/auth.service';
+import { registerFcmToken, unregisterFcmToken } from '@/services/fcm.service';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
 import { signOut } from 'firebase/auth';
@@ -43,30 +44,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [attendance, setAttendance] = useState<any>(null);
   const [isLoaded, setIsLoaded] = useState(false);
-  // async function handleSignOut() {
-  //   try {
-  //     await signOut(auth);
-  //   } catch (error) {
-  //     Toast.show({
-  //       type: 'error',
-  //       text1: 'Failed to SignOut',
-  //       text2: 'Error: ' + error,
-  //     });
-  //     console.error('Error signing out:', error);
-  //   }
-  // }
-  // async function handleSwitch() {
-  //   try {
-  //     await signOut(auth);
-  //   } catch (error) {
-  //     Toast.show({
-  //       type: 'error',
-  //       text1: 'Failed to SignOut',
-  //       text2: 'Error: ' + error,
-  //     });
-  //     console.error('Error signing out:', error);
-  //   }
-  // }
   async function handleSwitch() {
     try {
       await AsyncStorage.removeItem('APPITOR_ACTIVE_UID');
@@ -94,6 +71,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         await AsyncStorage.removeItem('APPITOR_ACTIVE_UID');
         await signOut(auth);
       }
+      unregisterFcmToken();
     } catch (error) {
       Toast.show({
         type: 'error',
@@ -335,6 +313,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           permissions: roleData ? roleData.permissions || [] : [],
         });
         setAuthState('ready');
+        registerFcmToken({
+          uid: activeUID,
+          role: userData.roleId,
+          schoolId: userData.schoolId,
+          branchId: userData.currentBranch,
+          classId: userData.className,
+          sectionId: userData.section,
+        });
       } catch (error) {
         console.log('Failed AuthContext: ' + error);
       } finally {
