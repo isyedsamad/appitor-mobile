@@ -50,7 +50,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [notificationBadge, setNotificationBadge] = useState({
     noticeboard: false,
     classNotice: false,
-    studentMessage: false,
+    personalMessage: false,
   });
 
   async function handleSwitch() {
@@ -245,15 +245,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         notificationIndex.classNoticeAt[classKey].toMillis() >
           read.classNoticeLastReadAt.toMillis());
 
-    const hasStudentMessage =
-      schoolUser.studentMessageAt &&
-      (!read.studentMessageLastReadAt ||
-        schoolUser.studentMessageAt.toMillis() > read.studentMessageLastReadAt.toMillis());
+    const hasPersonalMessage =
+      schoolUser.personalMessageAt &&
+      (!read.personalMessageLastReadAt ||
+        schoolUser.personalMessageAt.toMillis() > read.personalMessageLastReadAt.toMillis());
 
     setNotificationBadge({
       noticeboard: !!hasNoticeboard,
       classNotice: !!hasClassNotice,
-      studentMessage: !!hasStudentMessage,
+      personalMessage: !!hasPersonalMessage,
     });
   }, [notificationIndex, schoolUser]);
 
@@ -377,7 +377,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setAuthState('ready');
         registerFcmToken({
           uid: activeUID,
-          role: userData.roleId,
+          role: userData.role?.toLowerCase(),
           schoolId: userData.schoolId,
           branchId: userData.currentBranch,
           classId: userData.className,

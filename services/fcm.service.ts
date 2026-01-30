@@ -15,9 +15,9 @@ export async function registerFcmToken(context: {
   if (!allowed) return;
   const token = await getFcmToken();
   if (!token) return;
-  const lastToken = await AsyncStorage.getItem('FCM_TOKEN');
-  if (lastToken === token) return;
-  await setDoc(doc(db, 'fcmTokens', token), {
+  // const lastToken = await AsyncStorage.getItem('FCM_TOKEN');
+  // if (lastToken === token) return;
+  await setDoc(doc(db, 'fcmTokens', context.uid), {
     token,
     uid: context.uid,
     role: [context.role],

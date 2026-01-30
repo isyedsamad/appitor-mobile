@@ -28,7 +28,7 @@ function formatDate(ts: any): string {
 const readFields: Record<string, string> = {
   notice: 'notificationRead.notificationLastReadAt',
   class: 'notificationRead.classNoticeLastReadAt',
-  personal: 'notificationRead.studentMessageLastReadAt',
+  personal: 'notificationRead.personalMessageLastReadAt',
 };
 
 export default function NotificationPage() {
@@ -86,7 +86,7 @@ export default function NotificationPage() {
   //   const payload: any = {};
   //   if (tab === 'notice') payload.notificationLastReadAt = serverTimestamp();
   //   if (tab === 'class') payload.classNoticeLastReadAt = serverTimestamp();
-  //   if (tab === 'personal') payload.studentMessageLastReadAt = serverTimestamp();
+  //   if (tab === 'personal') payload.personalMessageLastReadAt = serverTimestamp();
   //   updateDoc(ref, payload);
   // }, [tab]);
 
@@ -115,7 +115,7 @@ export default function NotificationPage() {
       ...prev,
       noticeboard: tab === 'notice' ? false : prev.noticeboard,
       classNotice: tab === 'class' ? false : prev.classNotice,
-      studentMessage: tab === 'personal' ? false : prev.studentMessage,
+      personalMessage: tab === 'personal' ? false : prev.personalMessage,
     }));
   }
 
@@ -135,7 +135,7 @@ export default function NotificationPage() {
     return {
       notice: count(notices, read.notificationLastReadAt),
       class: count(classNotices, read.classNoticeLastReadAt),
-      personal: count(messages, read.studentMessageLastReadAt),
+      personal: count(messages, read.personalMessageLastReadAt),
     };
   }, [notices, classNotices, messages, schoolUser]);
 
@@ -224,7 +224,7 @@ export default function NotificationPage() {
                 lastReadMs = read.classNoticeLastReadAt?.toMillis?.() || 0;
               }
               if (tab === 'personal') {
-                lastReadMs = read.studentMessageLastReadAt?.toMillis?.() || 0;
+                lastReadMs = read.personalMessageLastReadAt?.toMillis?.() || 0;
               }
               const unread = createdAtMs > lastReadMs;
               return (

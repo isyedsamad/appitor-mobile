@@ -359,7 +359,7 @@ export function DashboardHeader({
   const hasNotification =
     notificationBadge.noticeboard ||
     notificationBadge.classNotice ||
-    notificationBadge.studentMessage;
+    notificationBadge.personalMessage;
   const pulseAnim = useRef(new Animated.Value(0)).current;
   useEffect(() => {
     Animated.loop(
