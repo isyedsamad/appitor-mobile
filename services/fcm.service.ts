@@ -20,7 +20,7 @@ export async function registerFcmToken(context: {
   await setDoc(doc(db, 'fcmTokens', token), {
     token,
     uid: context.uid,
-    role: context.role,
+    role: [context.role],
     schoolId: context.schoolId,
     branchId: context.branchId,
     classId: context.classId || null,

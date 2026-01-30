@@ -28,6 +28,8 @@ type AuthContextType = {
   attendance: any;
   authState: any;
   setAuthState: any;
+  notificationBadge: any;
+  setNotificationBadge: any;
 };
 
 type AuthState = 'loading' | 'logged-out' | 'switch-required' | 'ready';
@@ -44,6 +46,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [attendance, setAttendance] = useState<any>(null);
   const [isLoaded, setIsLoaded] = useState(false);
+  const [notificationIndex, setNotificationIndex] = useState<any>(null);
+  const [notificationBadge, setNotificationBadge] = useState({
+    noticeboard: false,
+    classNotice: false,
+    studentMessage: false,
+  });
+
   async function handleSwitch() {
     try {
       await AsyncStorage.removeItem('APPITOR_ACTIVE_UID');
@@ -58,6 +67,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.error('Switch error:', error);
     }
   }
+
   async function handleSignOut(activeUID: any) {
     try {
       await removeAccount(activeUID);
@@ -93,6 +103,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setClassData(classdata.classData);
     setLoading(false);
   };
+
   const loadSubjects = async (schoolId: any, branch: any) => {
     if (!branch) return;
     setLoading(true);
@@ -104,6 +115,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setSubjectData(subdata.subjects);
     setLoading(false);
   };
+
   const loadEmployee = async (schoolId: any, branch: any) => {
     if (!branch) return;
     setLoading(true);
@@ -128,6 +140,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setLoading(false);
     }
   };
+
   async function loadSessionAttendanceData(
     schoolId: any,
     branch: any,
@@ -149,6 +162,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const snap = await getDoc(ref);
     setSessionAttData(snap.exists() ? snap.data() : null);
   }
+
   const loadAttendanceStudent = async (
     uid: any,
     className: any,
@@ -182,6 +196,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setLoading(false);
     }
   };
+
   const loadAttendanceEmployee = async (uid: any, schoolId: any, branch: any) => {
     try {
       const today = new Date();
@@ -209,6 +224,39 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (!notificationIndex || !schoolUser) return;
+    const read = schoolUser.notificationRead || {};
+    const hasNoticeboard =
+      notificationIndex.noticeboardAt &&
+      (!read.notificationLastReadAt ||
+        notificationIndex.noticeboardAt.toMillis() > read.notificationLastReadAt.toMillis());
+
+    const classKey =
+      schoolUser.className && schoolUser.section
+        ? `${schoolUser.className}_${schoolUser.section}`
+        : null;
+
+    const hasClassNotice =
+      classKey &&
+      notificationIndex.classNoticeAt?.[classKey] &&
+      (!read.classNoticeLastReadAt ||
+        notificationIndex.classNoticeAt[classKey].toMillis() >
+          read.classNoticeLastReadAt.toMillis());
+
+    const hasStudentMessage =
+      schoolUser.studentMessageAt &&
+      (!read.studentMessageLastReadAt ||
+        schoolUser.studentMessageAt.toMillis() > read.studentMessageLastReadAt.toMillis());
+
+    setNotificationBadge({
+      noticeboard: !!hasNoticeboard,
+      classNotice: !!hasClassNotice,
+      studentMessage: !!hasStudentMessage,
+    });
+  }, [notificationIndex, schoolUser]);
+
   useEffect(() => {
     const unsub = subscribeToAuthChanges(async (firebaseUser) => {
       setLoading(true);
@@ -312,6 +360,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           roleName: userData.role?.toLowerCase(),
           permissions: roleData ? roleData.permissions || [] : [],
         });
+        const indexSnap = await getDoc(
+          doc(
+            db,
+            'schools',
+            userData.schoolId,
+            'branches',
+            userData.currentBranch,
+            'system',
+            'notificationIndex'
+          )
+        );
+        if (indexSnap.exists()) {
+          setNotificationIndex(indexSnap.data());
+        }
         setAuthState('ready');
         registerFcmToken({
           uid: activeUID,
@@ -345,6 +407,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         handleSwitch,
         sessionAttData,
         attendance,
+        notificationBadge,
+        setNotificationBadge,
       }}>
       {children}
     </AuthContext.Provider>

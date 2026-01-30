@@ -28,8 +28,8 @@ import {
   User2,
   Users,
 } from 'lucide-react-native';
-import { useMemo, useState } from 'react';
-import { TouchableOpacity, View } from 'react-native';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { Animated, Easing, TouchableOpacity, View } from 'react-native';
 
 export default function StudentDashboard() {
   const router = useRouter();
@@ -122,7 +122,7 @@ export default function StudentDashboard() {
         <DashboardHeader
           schoolName={schoolUser.schoolName || ''}
           userName={schoolUser.name || ''}
-          onNotificationPress={() => router.push('/(employee)/notifications')}
+          onNotificationPress={() => router.push('/(student)/notifications')}
         />
         {/* <View
         className="px-8 py-4 border-b-2 border-l-2 border-r-2 rounded-b-3xl"
@@ -349,12 +349,36 @@ export function DashboardHeader({
   userName: string;
   onNotificationPress: () => void;
 }) {
+  const { notificationBadge } = useAuth();
   const { colors } = useTheme();
   const { text: greeting, Icon } = getGreeting();
   const capitalizeWords = (str: string) => {
     if (!str) return;
     return str.replace(/\w\S*/g, (txt) => txt.charAt(0).toUpperCase() + txt.slice(1).toLowerCase());
   };
+  const hasNotification =
+    notificationBadge.noticeboard ||
+    notificationBadge.classNotice ||
+    notificationBadge.studentMessage;
+  const pulseAnim = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulseAnim, {
+          toValue: 1,
+          duration: 1200,
+          easing: Easing.out(Easing.ease),
+          useNativeDriver: true,
+        }),
+        Animated.timing(pulseAnim, {
+          toValue: 0,
+          duration: 1200,
+          easing: Easing.out(Easing.ease),
+          useNativeDriver: true,
+        }),
+      ])
+    ).start();
+  }, []);
 
   return (
     <View className="overflow-hidden">
@@ -387,12 +411,47 @@ export function DashboardHeader({
           <TouchableOpacity
             onPress={onNotificationPress}
             activeOpacity={0.85}
-            className="rounded-2xl border p-3"
+            className="relative rounded-2xl border p-3"
             style={{
               backgroundColor: colors.bgCard,
               borderColor: colors.border,
             }}>
             <Bell size={22} color={colors.text} />
+            {hasNotification && (
+              <>
+                <Animated.View
+                  style={{
+                    position: 'absolute',
+                    top: 6,
+                    right: 6,
+                    width: 14,
+                    height: 14,
+                    borderRadius: 7,
+                    backgroundColor: colors.primary,
+                    opacity: 0.15,
+                    transform: [
+                      {
+                        scale: pulseAnim.interpolate({
+                          inputRange: [0, 1],
+                          outputRange: [1.2, 1.7],
+                        }),
+                      },
+                    ],
+                  }}
+                />
+                <View
+                  style={{
+                    position: 'absolute',
+                    top: 9,
+                    right: 9,
+                    width: 8,
+                    height: 8,
+                    borderRadius: 5,
+                    backgroundColor: colors.primary,
+                  }}
+                />
+              </>
+            )}
           </TouchableOpacity>
         </View>
       </LinearGradient>
