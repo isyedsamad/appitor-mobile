@@ -243,7 +243,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       notificationIndex.classNoticeAt?.[classKey] &&
       (!read.classNoticeLastReadAt ||
         notificationIndex.classNoticeAt[classKey].toMillis() >
-          read.classNoticeLastReadAt.toMillis());
+        read.classNoticeLastReadAt.toMillis());
 
     const hasPersonalMessage =
       schoolUser.personalMessageAt &&
@@ -325,6 +325,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           }
           roleData = roleSnap.data();
         }
+
+        const branchAcademicRef = doc(db, 'schools', userData.schoolId, 'branches', userData.currentBranch, 'settings', 'academic');
+        const branchAcademicSnap = await getDoc(branchAcademicRef);
+        let branchSessions = [];
+        let activeSession = schoolData.currentSession;
+
+        if (branchAcademicSnap.exists()) {
+          const branchAcademicData = branchAcademicSnap.data();
+          if (branchAcademicData.sessions) {
+            branchSessions = branchAcademicData.sessions;
+          }
+          if (branchAcademicData.currentSession) {
+            activeSession = branchAcademicData.currentSession;
+          }
+        }
         await loadClasses(userData.schoolId, userData.currentBranch);
         await loadSubjects(userData.schoolId, userData.currentBranch);
         await loadEmployee(userData.schoolId, userData.currentBranch);
@@ -333,7 +348,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             userData.schoolId,
             userData.currentBranch,
             activeUID,
-            schoolData.currentSession
+            activeSession
           );
           await loadAttendanceStudent(
             activeUID,
@@ -352,7 +367,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setSchoolUser({
           ...userData,
           uid: activeUID,
-          currentSession: schoolData.currentSession,
+          currentSession: activeSession,
+          sessions: branchSessions,
           schoolName: schoolData.name,
           schoolAddress: `${schoolData.city ? `${schoolData.city}, ` : ''} ${schoolData.state ? `${schoolData.state}` : ''}`,
           schoolCode: schoolData.code,

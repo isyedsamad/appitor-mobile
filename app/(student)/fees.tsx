@@ -98,12 +98,8 @@ export default function StudentFeePortal() {
   useEffect(() => {
     async function loadSessions() {
       try {
-        const ref = doc(db, 'schools', schoolUser.schoolId, 'settings', 'academic');
-        const snap = await getDoc(ref);
-        if (!snap.exists()) return;
-        const data = snap.data();
-        setSessions(data.sessions || []);
-        setSession(data.currentSession);
+        setSessions(schoolUser.sessions?.map((s: any) => s.id) || []);
+        setSession(schoolUser.currentSession);
       } catch (e: any) {
         Toast.show({
           type: 'error',
@@ -286,10 +282,10 @@ export default function StudentFeePortal() {
 
     const discount = payment.discount
       ? {
-          type: payment.discount.type,
-          value: payment.discount.value,
-          amount: payment.discount.amount,
-        }
+        type: payment.discount.type,
+        value: payment.discount.value,
+        amount: payment.discount.amount,
+      }
       : null;
     const html = feeReceiptHTML({
       schoolName: schoolUser.schoolName,
@@ -330,16 +326,16 @@ export default function StudentFeePortal() {
           contentContainerStyle={{ paddingRight: 30 }}>
           {sessions.map((s: any) => (
             <TouchableOpacity
-              key={s.id}
-              onPress={() => setSession(s.id)}
+              key={s}
+              onPress={() => setSession(s)}
               className="mr-2 rounded-full px-4 py-1.5"
               style={{
-                backgroundColor: s.id === session ? colors.primarySoft : colors.bgCard,
+                backgroundColor: s === session ? colors.primarySoft : colors.bgCard,
                 borderWidth: 1,
-                borderColor: s.id === session ? colors.primary : colors.border,
+                borderColor: s === session ? colors.primary : colors.border,
               }}>
-              <AppText size="label" semibold primary={s.id === session}>
-                {s.id}
+              <AppText size="label" semibold primary={s === session}>
+                {s}
               </AppText>
             </TouchableOpacity>
           ))}

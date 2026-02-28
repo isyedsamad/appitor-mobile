@@ -78,11 +78,8 @@ export default function StudentLeavePage() {
     async function loadSessions() {
       setLoading(true);
       try {
-        const ref = doc(db, 'schools', schoolUser.schoolId, 'settings', 'academic');
-        const snap = await getDoc(ref);
-        if (!snap.exists()) return;
-        setSessions(snap.data().sessions);
-        setSession(snap.data().currentSession || snap.data().sessions[0]?.id);
+        setSessions(schoolUser.sessions || []);
+        setSession(schoolUser.currentSession);
       } catch (err) {
         Toast.show({
           type: 'error',
@@ -534,15 +531,15 @@ function SummaryItem({ label, value, variant }: any) {
   const ui =
     variant === 'approved'
       ? {
-          bg: colors.statusPbg,
-          text: colors.statusPtext,
-          border: colors.statusPborder,
-        }
+        bg: colors.statusPbg,
+        text: colors.statusPtext,
+        border: colors.statusPborder,
+      }
       : {
-          bg: colors.statusAbg,
-          text: colors.statusAtext,
-          border: colors.statusAborder,
-        };
+        bg: colors.statusAbg,
+        text: colors.statusAtext,
+        border: colors.statusAborder,
+      };
   return (
     <View
       className="flex-1 rounded-xl border px-5 py-3"

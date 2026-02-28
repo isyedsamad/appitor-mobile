@@ -54,10 +54,7 @@ export default function EmployeeAssignmentPage() {
       try {
         setClassId(schoolUser.className);
         setSectionId(schoolUser.section);
-        const ref = doc(db, 'schools', schoolUser.schoolId, 'settings', 'academic');
-        const snap = await getDoc(ref);
-        if (!snap.exists()) return;
-        setSessionList(snap.data().sessions || []);
+        setSessionList(schoolUser.sessions || []);
         searchAssignments(schoolUser.currentSession);
       } catch (err) {
         Toast.show({

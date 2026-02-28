@@ -51,13 +51,8 @@ export default function MyAttendancePage() {
     async function loadSessions() {
       setLoading(true);
       try {
-        const ref = doc(db, 'schools', schoolUser.schoolId, 'settings', 'academic');
-        const snap = await getDoc(ref);
-        if (!snap.exists()) return;
-
-        const data = snap.data();
-        setSessions(data.sessions || []);
-        setSession(data.currentSession);
+        setSessions(schoolUser.sessions || []);
+        setSession(schoolUser.currentSession);
         setLoading(false);
       } catch (err: any) {
         Toast.show({

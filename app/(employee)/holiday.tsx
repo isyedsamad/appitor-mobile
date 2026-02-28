@@ -34,11 +34,8 @@ export default function HolidayPage() {
     async function loadSessions() {
       setLoading(true);
       try {
-        const ref = doc(db, 'schools', schoolUser.schoolId, 'settings', 'academic');
-        const snap = await getDoc(ref);
-        if (!snap.exists()) return;
-        setSessions(snap.data().sessions || []);
-        setSession(snap.data().currentSession);
+        setSessions(schoolUser.sessions || []);
+        setSession(schoolUser.currentSession);
       } catch (err) {
         Toast.show({
           type: 'error',

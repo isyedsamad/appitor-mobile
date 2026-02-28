@@ -1,5 +1,5 @@
 import { useRouter } from 'expo-router';
-import { collection, doc, getDoc, getDocs, orderBy, query, where } from 'firebase/firestore';
+import { collection, getDocs, orderBy, query, where } from 'firebase/firestore';
 import { CalendarRange, ChevronRight, ClipboardCheck, Lock } from 'lucide-react-native';
 import { useEffect, useMemo, useState } from 'react';
 import { ScrollView, TouchableOpacity, View } from 'react-native';
@@ -34,11 +34,7 @@ export default function StudentExamPortal() {
   useEffect(() => {
     async function loadSessions() {
       try {
-        const ref = doc(db, 'schools', schoolUser.schoolId, 'settings', 'academic');
-        const snap = await getDoc(ref);
-        if (!snap.exists()) return;
-        const list = snap.data().sessions;
-        setSessions(list);
+        setSessions(schoolUser.sessions || []);
         setSession(schoolUser.currentSession);
       } finally {
         setLoading(false);

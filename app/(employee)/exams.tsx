@@ -6,7 +6,7 @@ import { useAuth } from '@/context/AuthContext';
 import { useTheme } from '@/context/ThemeContext';
 import { db } from '@/lib/firebase';
 import { router } from 'expo-router';
-import { collection, doc, getDoc, getDocs, orderBy, query, where } from 'firebase/firestore';
+import { collection, getDocs, orderBy, query, where } from 'firebase/firestore';
 import { CalendarRange, ClipboardList } from 'lucide-react-native';
 import { useEffect, useMemo, useState } from 'react';
 import { ScrollView, TouchableOpacity, View } from 'react-native';
@@ -40,13 +40,8 @@ export default function EmployeeExamsPage() {
     async function loadSessions() {
       setLoading(true);
       try {
-        const ref = doc(db, 'schools', schoolUser.schoolId, 'settings', 'academic');
-        const snap = await getDoc(ref);
-        if (!snap.exists()) return;
-        const list = snap.data().sessions;
-        const current = snap.data().currentSession;
-        setSessions(list);
-        setSession(current || list[0]?.id);
+        setSessions(schoolUser.sessions || []);
+        setSession(schoolUser.currentSession);
       } catch (err) {
         Toast.show({
           type: 'error',

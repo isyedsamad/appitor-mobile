@@ -58,11 +58,8 @@ export default function EmployeeComplaintPage() {
     async function loadSessions() {
       setLoading(true);
       try {
-        const ref = doc(db, 'schools', schoolUser.schoolId, 'settings', 'academic');
-        const snap = await getDoc(ref);
-        if (!snap.exists()) return;
-        setSessions(snap.data().sessions);
-        setSession(snap.data().currentSession || snap.data().sessions[0]?.id);
+        setSessions(schoolUser.sessions || []);
+        setSession(schoolUser.currentSession);
       } catch (err) {
         Toast.show({
           type: 'error',
@@ -430,15 +427,15 @@ function SummaryItem({ label, value, variant }: any) {
   const ui =
     variant === 'solved'
       ? {
-          bg: colors.statusPbg,
-          text: colors.statusPtext,
-          border: colors.statusPborder,
-        }
+        bg: colors.statusPbg,
+        text: colors.statusPtext,
+        border: colors.statusPborder,
+      }
       : {
-          bg: colors.statusLbg,
-          text: colors.statusLtext,
-          border: colors.statusLborder,
-        };
+        bg: colors.statusLbg,
+        text: colors.statusLtext,
+        border: colors.statusLborder,
+      };
   return (
     <View
       className="flex-1 rounded-xl border px-5 py-3"

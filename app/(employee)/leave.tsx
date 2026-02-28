@@ -73,18 +73,15 @@ export default function EmployeeLeavePage() {
       border: colors.statusAborder,
       label: "REJECTED",
     },
-  };  
+  };
 
   useEffect(() => {
     async function loadSessions() {
       setLoading(true);
       try {
-        const ref = doc(db, "schools", schoolUser.schoolId, "settings", "academic");
-        const snap = await getDoc(ref);
-        if (!snap.exists()) return;
-        setSessions(snap.data().sessions);
-        setSession(snap.data().currentSession || snap.data().sessions[0]?.id);
-      } catch(err) {
+        setSessions(schoolUser.sessions || []);
+        setSession(schoolUser.currentSession);
+      } catch (err) {
         Toast.show({
           type: 'error',
           text1: 'Failed to load Sessions'
@@ -139,15 +136,17 @@ export default function EmployeeLeavePage() {
 
   async function saveLeave() {
     if (!reason.trim()) {
-      Toast.show({ type: "error", text1: "Please enter Leave Reason",
+      Toast.show({
+        type: "error", text1: "Please enter Leave Reason",
         text2: 'enter a valid reason to request!'
-       });
+      });
       return;
     }
-    if(mode == 'multi' && !toDate) {
-      Toast.show({ type: "error", text1: "Please Select To-Date",
+    if (mode == 'multi' && !toDate) {
+      Toast.show({
+        type: "error", text1: "Please Select To-Date",
         text2: 'select a valid to-date to request!'
-       });
+      });
       return;
     }
     setLoading(true);
@@ -168,7 +167,7 @@ export default function EmployeeLeavePage() {
       setMode("single");
       setToDate(null);
       await loadLeaves();
-    } catch(err: any) {
+    } catch (err: any) {
       Toast.show({
         type: 'error',
         text1: 'Failed to send Request',
@@ -205,7 +204,7 @@ export default function EmployeeLeavePage() {
     } finally {
       setLoading(false);
     }
-  }  
+  }
 
   if (loading) return <Loading />;
 
@@ -289,9 +288,9 @@ export default function EmployeeLeavePage() {
         </View>
 
         <View
-            className="my-4 mx-3"
-            style={{ height: 1, backgroundColor: colors.border }}
-          />
+          className="my-4 mx-3"
+          style={{ height: 1, backgroundColor: colors.border }}
+        />
 
         <View className="px-5">
           {leaves.length === 0 ? (
@@ -357,20 +356,20 @@ export default function EmployeeLeavePage() {
                   </View>
                   {l.status === "pending" && (
                     <>
-                    <View style={{ borderTopWidth: 1, borderColor: colors.statusAborder }}></View>
-                    <TouchableOpacity
-                      onPress={() => {
-                        setWithdrawLeave(l);
-                        setShowWithdrawConfirm(true);
-                      }}
-                      className="flex-row items-center gap-2 px-6 py-4"
-                      style={{ backgroundColor: colors.statusAbg }}
-                    >
-                      <Trash2 size={13} color={colors.statusAtext} />
-                      <AppText size="subtext" semibold style={{ color: colors.statusAtext }}>
-                        Withdraw Leave Request
-                      </AppText>
-                    </TouchableOpacity>
+                      <View style={{ borderTopWidth: 1, borderColor: colors.statusAborder }}></View>
+                      <TouchableOpacity
+                        onPress={() => {
+                          setWithdrawLeave(l);
+                          setShowWithdrawConfirm(true);
+                        }}
+                        className="flex-row items-center gap-2 px-6 py-4"
+                        style={{ backgroundColor: colors.statusAbg }}
+                      >
+                        <Trash2 size={13} color={colors.statusAtext} />
+                        <AppText size="subtext" semibold style={{ color: colors.statusAtext }}>
+                          Withdraw Leave Request
+                        </AppText>
+                      </TouchableOpacity>
                     </>
                   )}
                 </View>
@@ -557,15 +556,15 @@ function SummaryItem({ label, value, variant }: any) {
   const ui =
     variant === "approved"
       ? {
-          bg: colors.statusPbg,
-          text: colors.statusPtext,
-          border: colors.statusPborder,
-        }
+        bg: colors.statusPbg,
+        text: colors.statusPtext,
+        border: colors.statusPborder,
+      }
       : {
-          bg: colors.statusAbg,
-          text: colors.statusAtext,
-          border: colors.statusAborder,
-        };
+        bg: colors.statusAbg,
+        text: colors.statusAtext,
+        border: colors.statusAborder,
+      };
   return (
     <View
       className="flex-1 px-5 py-3 rounded-xl border"

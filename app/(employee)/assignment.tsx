@@ -90,10 +90,7 @@ export default function EmployeeAssignmentPage() {
     async function loadSessions() {
       setLoading(true);
       try {
-        const ref = doc(db, 'schools', schoolUser.schoolId, 'settings', 'academic');
-        const snap = await getDoc(ref);
-        if (!snap.exists()) return;
-        setSessionList(snap.data().sessions || []);
+        setSessionList(schoolUser.sessions || []);
       } catch (err) {
         Toast.show({
           type: 'error',
