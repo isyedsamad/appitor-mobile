@@ -1,5 +1,5 @@
 import { useRouter } from 'expo-router';
-import { collection, getDocs } from 'firebase/firestore';
+import { doc, getDoc } from 'firebase/firestore';
 import { ChevronDown, ChevronRightCircle, Lock, User, X } from 'lucide-react-native';
 import { useEffect, useState } from 'react';
 import {
@@ -50,14 +50,21 @@ export default function LoginScreen() {
     async function fetchSchools() {
       setLoadingLogin(true);
       try {
-        const snap = await getDocs(collection(db, 'schools'));
+        const snap = await getDoc(doc(db, "schoolList", "items"));
         if (!active) return;
+        if (!snap.exists()) {
+          setSchoolLoadingText('No school found..');
+          return;
+        }
+        const items = snap.data().items || [];
         setSchools(
-          snap.docs.map((doc) => ({
-            id: doc.id,
-            name: doc.data().name,
-            code: doc.data().code,
-          }))
+          items
+            .filter((s: any) => s.status === "active")
+            .map((s: any) => ({
+              id: s.id,
+              name: s.name,
+              code: s.code
+            }))
         );
         setSchoolLoadingText('Select your school');
       } catch (e) {
