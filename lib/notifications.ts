@@ -1,6 +1,7 @@
 import Constants from 'expo-constants';
 import * as Device from 'expo-device';
 import * as Notifications from 'expo-notifications';
+import Toast from 'react-native-toast-message';
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -29,7 +30,15 @@ export async function getFcmToken() {
     return null;
   }
   try {
-    const projectId = Constants.expoConfig?.extra?.eas?.projectId || Constants.expoConfig?.slug;
+    const projectId =
+      Constants.expoConfig?.extra?.eas?.projectId ||
+      Constants.easConfig?.projectId ||
+      Constants.expoConfig?.slug;
+    
+    if (!projectId) {
+      Toast.show({ type: 'error', text1: 'Push Notification', text2: 'Missing Project ID' });
+    }
+
     const token = (
       await Notifications.getExpoPushTokenAsync({
         projectId: projectId,
@@ -38,5 +47,6 @@ export async function getFcmToken() {
     return token;
   } catch (err) {
     console.log('Token Error: ' + err);
+    Toast.show({ type: 'error', text1: 'Token Error', text2: String(err) });
   }
 }
