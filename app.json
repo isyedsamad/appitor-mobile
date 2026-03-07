@@ -31,8 +31,7 @@
       "edgeToEdgeEnabled": false,
       "predictiveBackGestureEnabled": false,
       "softwareKeyboardLayoutMode": "pan",
-      "package": "com.appitor.appitorschool",
-      "googleServicesFile": "./google-services.json"
+      "package": "com.appitor.appitorschool"
     },
     "web": {
       "bundler": "metro",
