@@ -70,6 +70,7 @@ export default function StudentTimetablePage() {
   const [settings, setSettings] = useState<any>(null);
   const [studentSlots, setStudentSlots] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [substitutions, setSubstitutions] = useState<any[]>([]);
 
   const [view, setView] = useState<'day' | 'week'>('day');
   const [date, setDate] = useState(new Date());
@@ -126,28 +127,68 @@ export default function StudentTimetablePage() {
     init();
   }, []);
 
+  useEffect(() => {
+    async function loadSubstitutions() {
+      const dateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+      setLoading(true);
+      const subRef = doc(
+        db,
+        'schools',
+        schoolUser.schoolId,
+        'branches',
+        schoolUser.currentBranch,
+        'timetable',
+        'items',
+        'substitutions',
+        `${schoolUser.className}_${schoolUser.section}_${dateStr}`
+      );
+      try {
+        const snap = await getDoc(subRef);
+        setSubstitutions(snap.exists() ? snap.data().substitutions || [] : []);
+      } catch (e) {
+        setSubstitutions([]);
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadSubstitutions();
+  }, [date, schoolUser]);
+
   /* ---------------- derived ---------------- */
 
   const timeline = useMemo(() => (settings ? buildTimeline(settings) : {}), [settings]);
 
   const getDaySlots = (d: string) => {
     if (!studentSlots?.days?.[d]) return [];
-    return Object.values(studentSlots.days[d]).flatMap((p: any) =>
+    const regular = Object.values(studentSlots.days[d]).flatMap((p: any) =>
       (p.entries || []).map((e: any) => ({
         ...e,
         period: p.period,
         day: d,
         classId: schoolUser.className,
         sectionId: schoolUser.section,
+        isSubstitution: false,
       }))
     );
+
+    if (view === 'day' && d === dayCode) {
+      const merged = [...regular];
+      substitutions.forEach((sub: any) => {
+        const idx = merged.findIndex((e) => e.period === sub.period);
+        if (idx !== -1) merged[idx] = { ...sub, isSubstitution: true };
+        else merged.push({ ...sub, isSubstitution: true });
+      });
+      return merged.sort((a, b) => a.period - b.period);
+    }
+
+    return regular;
   };
 
   const focusedRows = useMemo(() => {
     if (!settings) return [];
     const d = view === 'day' ? dayCode : weekDay;
     return buildRows(getDaySlots(d), settings);
-  }, [settings, view, dayCode, weekDay, studentSlots]);
+  }, [settings, view, dayCode, weekDay, studentSlots, substitutions]);
 
   const todaySlots = getDaySlots(dayCode);
   const nowSlot = todaySlots.find((s) =>
@@ -173,7 +214,7 @@ export default function StudentTimetablePage() {
       <Header title="Timetable" />
       <ScrollView>
         <View
-          className="mx-6 mt-4 rounded-2xl p-6"
+          className="mx-6 mt-5 rounded-xl px-6 py-5"
           style={{
             backgroundColor: colors.bgCard,
             borderWidth: 1,
@@ -181,7 +222,7 @@ export default function StudentTimetablePage() {
           }}>
           <View className="flex-row items-start justify-between">
             <View>
-              <AppText size="subtext" muted>
+              <AppText size="subtext" semibold primary muted>
                 {date.toDateString()}
               </AppText>
               <AppText size="title" semibold>
@@ -191,7 +232,11 @@ export default function StudentTimetablePage() {
             <TouchableOpacity
               onPress={openDatePicker}
               className="flex-row items-center gap-2 rounded-lg px-4 py-2"
-              style={{ backgroundColor: colors.primarySoft }}>
+              style={{
+                backgroundColor: colors.primarySoft,
+                borderWidth: 1,
+                borderColor: colors.primary + '33'
+              }}>
               <CalendarDays size={14} color={colors.primary} />
               <AppText semibold primary>
                 Change
@@ -203,14 +248,14 @@ export default function StudentTimetablePage() {
               <AppText size="subtext" muted>
                 Periods Today
               </AppText>
-              <AppText semibold>{todaySlots.length}</AppText>
+              <AppText semibold>{todaySlots.length == 0 ? '--' : todaySlots.length.toString().padStart(2, '0')}</AppText>
             </View>
             <View>
               <AppText size="subtext" muted>
                 Current Class
               </AppText>
               <AppText semibold>
-                {nowSlot ? subjectData.find((s: any) => s.id === nowSlot.subjectId)?.name : '—'}
+                {nowSlot ? subjectData.find((s: any) => s.id === nowSlot.subjectId)?.name : '--'}
               </AppText>
             </View>
             <View>
@@ -226,15 +271,15 @@ export default function StudentTimetablePage() {
             </View>
           </View>
         </View>
-        <View className="mx-5 mt-4">
+        <View className="mx-5 mt-3">
           <View
             className="flex-row gap-2 rounded-2xl border p-1"
             style={{
               backgroundColor: colors.bgCard,
               borderColor: colors.border,
             }}>
-            <FilterTab label="Today" active={view === 'day'} onPress={() => setView('day')} />
-            <FilterTab label="Week" active={view === 'week'} onPress={() => setView('week')} />
+            <FilterTab label="Today's View" active={view === 'day'} onPress={() => setView('day')} />
+            <FilterTab label="Weekly Overview" active={view === 'week'} onPress={() => setView('week')} />
           </View>
         </View>
         {/* <View
@@ -300,7 +345,7 @@ export default function StudentTimetablePage() {
                 style={{
                   backgroundColor: weekDay === d ? colors.primarySoft : colors.bgCard,
                   borderWidth: 1,
-                  borderColor: colors.border,
+                  borderColor: weekDay == d ? colors.primary : colors.border,
                 }}>
                 <AppText size="label" semibold primary={weekDay === d}>
                   {d}
@@ -314,7 +359,7 @@ export default function StudentTimetablePage() {
             data={focusedRows}
             keyExtractor={(_, i) => String(i)}
             scrollEnabled={false}
-            contentContainerStyle={{ gap: 12, paddingBottom: 40 }}
+            contentContainerStyle={{ gap: 10, paddingBottom: 40 }}
             renderItem={({ item }) =>
               item.type === 'break' ? (
                 <View
@@ -347,6 +392,12 @@ function PeriodCard({ slot, timeline }: any) {
   const time = timeline[slot.period];
   const today = DAY_CODES[new Date().getDay()];
   const active = slot.day === today && isNow(time.start, time.end);
+  const capitalizeWords = (str: string) => {
+    if (!str) return;
+    return str.replace(/\w\S*/g, txt =>
+      txt.charAt(0).toUpperCase() + txt.slice(1).toLowerCase()
+    );
+  }
 
   return (
     <View
@@ -366,9 +417,21 @@ function PeriodCard({ slot, timeline }: any) {
       </View>
 
       <View className="flex-1">
-        <AppText semibold>{subjectData.find((s: any) => s.id === slot.subjectId)?.name}</AppText>
+        <View className="flex-row items-center justify-between">
+          <AppText semibold className="flex-1">
+            {subjectData.find((s: any) => s.id === slot.subjectId)?.name}
+          </AppText>
+          {slot.isSubstitution && (
+            <View className="rounded-full px-2 py-0.5" style={{ backgroundColor: colors.statusPbg }}>
+              <AppText size="min" semibold style={{ color: colors.statusPtext }}>
+                Substitution
+              </AppText>
+            </View>
+          )}
+        </View>
         <AppText size="subtext" muted>
-          {employeeData.find((t: any) => t.uid === slot.teacherId)?.name}
+          {capitalizeWords(employeeData.find((t: any) => t.uid === (slot.teacherId || slot.substituteTeacherId))
+            ?.name)}
         </AppText>
         <AppText size="min" muted>
           {minutesToTime(time.start)} – {minutesToTime(time.end)}
@@ -386,6 +449,8 @@ function FilterTab({ label, active, onPress }: any) {
       className="flex-1 items-center rounded-xl py-3"
       style={{
         backgroundColor: active ? colors.primarySoft : 'transparent',
+        borderWidth: 1,
+        borderColor: active ? colors.primary + '33' : 'transparent'
       }}>
       <AppText
         size="label"

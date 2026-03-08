@@ -10,6 +10,7 @@ import { DateTimePickerAndroid } from '@react-native-community/datetimepicker';
 import { doc, getDoc } from 'firebase/firestore';
 import {
   AlertTriangle,
+  Blocks,
   CalendarRange,
   ChevronRight,
   ChevronRightCircle,
@@ -288,8 +289,19 @@ export default function StudentLeavePage() {
 
         <View className="px-5">
           {leaves.length === 0 ? (
-            <View className="items-center py-20">
-              <AppText muted>No leave requests found</AppText>
+            <View className="items-center py-12 rounded-xl"
+              style={{
+                backgroundColor: colors.bgCard,
+                borderWidth: 1,
+                borderColor: colors.border,
+              }}>
+              <Blocks size={32} color={colors.statusAtext} />
+              <AppText bold muted className="mt-3">
+                No leave request found!
+              </AppText>
+              <AppText size="subtext" muted>
+                For leave requests, we are here to assist you.
+              </AppText>
             </View>
           ) : (
             leaves.map((l: any) => {

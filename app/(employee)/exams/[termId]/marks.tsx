@@ -190,8 +190,8 @@ export default function MarksEntryPage() {
         schoolUser.schoolId,
         "branches",
         schoolUser.currentBranch,
-        "meta",
-        `${classId}_${sectionId}`
+        'meta',
+        `${classId}_${sectionId}_${schoolUser.currentSession}`
       );
       const metaSnap = await getDoc(metaRef);
       const stuData = metaSnap.exists()

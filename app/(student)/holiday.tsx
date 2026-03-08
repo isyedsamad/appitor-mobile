@@ -6,7 +6,7 @@ import { useAuth } from '@/context/AuthContext';
 import { useTheme } from '@/context/ThemeContext';
 import { db } from '@/lib/firebase';
 import { doc, getDoc } from 'firebase/firestore';
-import { CalendarDays } from 'lucide-react-native';
+import { Blocks, CalendarDays } from 'lucide-react-native';
 import { useEffect, useMemo, useState } from 'react';
 import { ScrollView, TouchableOpacity, View } from 'react-native';
 import Toast from 'react-native-toast-message';
@@ -186,8 +186,19 @@ export default function HolidayPage() {
         </View>
         <View className="mt-4 px-5">
           {filtered.length === 0 ? (
-            <View className="items-center py-20">
-              <AppText muted>No holidays found</AppText>
+            <View className="items-center py-12 rounded-xl"
+              style={{
+                backgroundColor: colors.bgCard,
+                borderWidth: 1,
+                borderColor: colors.border,
+              }}>
+              <Blocks size={32} color={colors.statusAtext} />
+              <AppText bold muted className="mt-3">
+                No holiday found!
+              </AppText>
+              <AppText size="subtext" muted>
+                Try searching for different session!
+              </AppText>
             </View>
           ) : (
             filtered.map((h) => <HolidayCard key={h.id} holiday={h} />)

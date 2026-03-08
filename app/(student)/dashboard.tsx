@@ -19,7 +19,6 @@ import {
   FileText,
   GraduationCap,
   IndianRupee,
-  Library,
   MessageCircle,
   NotebookText,
   Sun,
@@ -27,6 +26,7 @@ import {
   Sunset,
   User2,
   Users,
+  Video
 } from 'lucide-react-native';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Animated, Easing, TouchableOpacity, View } from 'react-native';
@@ -121,6 +121,7 @@ export default function StudentDashboard() {
       <Screen>
         <DashboardHeader
           schoolName={schoolUser.schoolName || ''}
+          branchName={schoolUser.branchName || ''}
           userName={schoolUser.name || ''}
           onNotificationPress={() => router.push('/(student)/notifications')}
         />
@@ -194,8 +195,9 @@ export default function StudentDashboard() {
             />
           </View>
 
-          <View
+          <TouchableOpacity
             className="mt-4 rounded-2xl p-5"
+            onPress={() => router.push('/(student)/my-attendance')}
             style={{ backgroundColor: colors.bgCard, borderWidth: 1, borderColor: colors.border }}>
             <View className="flex-row items-center justify-between">
               <View>
@@ -235,15 +237,10 @@ export default function StudentDashboard() {
                 </View>
               ))}
             </View>
-          </View>
+          </TouchableOpacity>
 
           <Section title="Academic Portal">
             <PortalGrid>
-              <PortalItem
-                icon={<Library size={24} color={colors.primary} />}
-                label="Online Class"
-                onPress={() => router.push('/(employee)/online-class')}
-              />
               <PortalItem
                 icon={<AlarmClock size={24} color={colors.primary} />}
                 label="My Attendance"
@@ -255,19 +252,24 @@ export default function StudentDashboard() {
                 onPress={() => router.push('/(student)/timetable')}
               />
               <PortalItem
-                icon={<Users size={24} color={colors.primary} />}
-                label="Faculty"
-                onPress={() => router.push('/(student)/employees')}
-              />
-              <PortalItem
                 icon={<GraduationCap size={24} color={colors.primary} />}
                 label="Exam Portal"
                 onPress={() => router.push('/(student)/exams')}
               />
               <PortalItem
+                icon={<Users size={24} color={colors.primary} />}
+                label="Faculty"
+                onPress={() => router.push('/(student)/employees')}
+              />
+              <PortalItem
                 icon={<BadgeCheck size={24} color={colors.primary} />}
                 label="Assignment"
                 onPress={() => router.push('/(student)/assignment')}
+              />
+              <PortalItem
+                icon={<Video size={24} color={colors.primary} />}
+                label="Online Class"
+                onPress={() => router.push('/(student)/online-class')}
               />
             </PortalGrid>
           </Section>
@@ -276,7 +278,7 @@ export default function StudentDashboard() {
               <PortalItem
                 icon={<MessageCircle size={24} color={colors.primary} />}
                 label="Message"
-                onPress={() => router.push('/(employee)/salary')}
+                onPress={() => router.push('/(student)/notifications')}
               />
               <PortalItem
                 icon={<FileText size={24} color={colors.primary} />}
@@ -296,7 +298,7 @@ export default function StudentDashboard() {
               <PortalItem
                 icon={<NotebookText size={24} color={colors.primary} />}
                 label="Study Material"
-                onPress={() => router.push('/(employee)/study-material')}
+                onPress={() => router.push('/(student)/study-material')}
               />
               <PortalItem
                 icon={<User2 size={24} color={colors.primary} />}
@@ -342,10 +344,12 @@ function getGreeting(): { text: string; Icon: LucideIcon } {
 
 export function DashboardHeader({
   schoolName,
+  branchName,
   userName,
   onNotificationPress,
 }: {
   schoolName: string;
+  branchName: string;
   userName: string;
   onNotificationPress: () => void;
 }) {
@@ -382,10 +386,18 @@ export function DashboardHeader({
 
   return (
     <View className="overflow-hidden">
-      <LinearGradient colors={[colors.primarySoft, colors.bg]} className="px-6 pb-6 pt-5">
-        <AppText size="label" bold className="text-center uppercase tracking-widest">
-          {schoolName}
-        </AppText>
+      <LinearGradient colors={[colors.primarySoft, colors.bg]} className="px-7 pb-6 pt-5">
+        <LinearGradient style={{ paddingVertical: 1, paddingHorizontal: 8, borderRadius: 5, alignSelf: 'center' }}
+          colors={[colors.bgCard + '00', colors.bgCard + '00']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}>
+          <AppText size="label" bold className="text-center uppercase">
+            {schoolName}
+          </AppText>
+          <AppText size="min" muted semibold className="text-center uppercase">
+            Branch: {branchName}
+          </AppText>
+        </LinearGradient>
         <View className="mt-5 flex-row items-start justify-between">
           <View className="flex-1">
             <AppText size="subtext" muted bold>

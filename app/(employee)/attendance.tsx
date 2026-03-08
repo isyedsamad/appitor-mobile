@@ -6,6 +6,7 @@ import { useAuth } from '@/context/AuthContext';
 import { useTheme } from '@/context/ThemeContext';
 import { db } from '@/lib/firebase';
 import secureAxios from '@/lib/secureAxios';
+import { LinearGradient } from 'expo-linear-gradient';
 import { doc, getDoc } from 'firebase/firestore';
 import {
   CheckCircle,
@@ -82,7 +83,7 @@ export default function StudentAttendancePage() {
         'branches',
         schoolUser.currentBranch,
         'meta',
-        `${classId}_${sectionId}`
+        `${classId}_${sectionId}_${schoolUser.currentSession}`
       );
       const snapMeta = await getDoc(rosterRef);
       if (!snapMeta.exists()) {
@@ -192,7 +193,7 @@ export default function StudentAttendancePage() {
       <Screen scroll={false}>
         <Header title="Attendance" />
         <ScrollView>
-          <View className="mt-6 gap-4 px-5">
+          <View className="mt-6 gap-2 px-5">
             <View className="gap-1 px-3">
               <View className="flex-row gap-3">
                 <View className="flex-1">
@@ -321,7 +322,7 @@ export default function StudentAttendancePage() {
               </View>
             </Modal>
 
-            <View className="my-1" style={{ height: 1, backgroundColor: colors.border }} />
+            <View className="my-2" style={{ height: 1, backgroundColor: colors.border }} />
 
             {students.length === 0 && (
               <View
@@ -364,59 +365,8 @@ export default function StudentAttendancePage() {
             )}
 
             {students.length > 0 && (
-              <View className="mx-3">
-                <View
-                  className="items-center rounded-full px-4 py-1.5"
-                  style={{
-                    backgroundColor: isMarked ? colors.statusPbg : colors.statusLbg,
-                    borderWidth: 1,
-                    borderColor: isMarked ? colors.statusPborder : colors.statusLborder,
-                  }}>
-                  <AppText
-                    semibold
-                    style={{
-                      color: isMarked ? colors.statusPtext : colors.statusLtext,
-                    }}>
-                    {isMarked ? 'Attendance Marked' : 'Attendance Not Marked'}
-                  </AppText>
-                </View>
-              </View>
-            )}
-
-            {students.length > 0 && !isMarked && (
-              <View className="mx-3 flex-row gap-3">
-                <TouchableOpacity
-                  onPress={() => markAll('P')}
-                  activeOpacity={0.85}
-                  className="flex-1 flex-row items-center justify-center gap-2 rounded-xl border py-3"
-                  style={{
-                    backgroundColor: colors.statusPbg,
-                    borderColor: colors.statusPborder,
-                  }}>
-                  <CheckCircle size={16} color={colors.statusPtext} />
-                  <AppText semibold style={{ color: colors.statusPtext }}>
-                    All Present
-                  </AppText>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  onPress={() => markAll('A')}
-                  activeOpacity={0.85}
-                  className="flex-1 flex-row items-center justify-center gap-2 rounded-xl border py-3"
-                  style={{
-                    backgroundColor: colors.statusAbg,
-                    borderColor: colors.statusAborder,
-                  }}>
-                  <XCircle size={16} color={colors.statusAtext} />
-                  <AppText semibold style={{ color: colors.statusAtext }}>
-                    All Absent
-                  </AppText>
-                </TouchableOpacity>
-              </View>
-            )}
-
-            {students.length > 0 && (
               <View
-                className="mx-2 gap-4 rounded-2xl border p-4"
+                className="mx-2 gap-4 rounded-2xl border py-4 px-5"
                 style={{
                   backgroundColor: colors.bgCard,
                   borderColor: colors.border,
@@ -467,14 +417,65 @@ export default function StudentAttendancePage() {
             )}
 
             {students.length > 0 && (
-              <View className="my-1" style={{ height: 1, backgroundColor: colors.border }} />
+              <View className="my-2" style={{ height: 1, backgroundColor: colors.border }} />
+            )}
+
+            {(students.length > 0 && !isMarked) && (
+              <View className="mx-3">
+                <View
+                  className="items-center rounded-lg px-4 py-2"
+                  style={{
+                    backgroundColor: colors.bgCard,
+                    borderWidth: 1,
+                    borderColor: colors.border,
+                  }}>
+                  <AppText
+                    semibold
+                    style={{
+                      color: isMarked ? colors.statusPtext : colors.statusLtext,
+                    }}>
+                    {isMarked ? 'Attendance Marked' : 'Attendance Not Marked'}
+                  </AppText>
+                </View>
+              </View>
+            )}
+
+            {students.length > 0 && !isMarked && (
+              <View className="mx-3 flex-row gap-2 mb-3">
+                <TouchableOpacity
+                  onPress={() => markAll('P')}
+                  activeOpacity={0.85}
+                  className="flex-1 flex-row items-center justify-center gap-2 rounded-lg border py-3"
+                  style={{
+                    backgroundColor: colors.statusPbg + '99',
+                    borderColor: colors.statusPborder,
+                  }}>
+                  <CheckCircle size={16} color={colors.statusPtext} />
+                  <AppText semibold style={{ color: colors.statusPtext }}>
+                    All Present
+                  </AppText>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={() => markAll('A')}
+                  activeOpacity={0.85}
+                  className="flex-1 flex-row items-center justify-center gap-2 rounded-lg border py-3"
+                  style={{
+                    backgroundColor: colors.statusAbg + '99',
+                    borderColor: colors.statusAborder,
+                  }}>
+                  <XCircle size={16} color={colors.statusAtext} />
+                  <AppText semibold style={{ color: colors.statusAtext }}>
+                    All Absent
+                  </AppText>
+                </TouchableOpacity>
+              </View>
             )}
 
             <View className="gap-2">
               {students.map((s) => (
                 <View
                   key={s.uid}
-                  className="mx-2 rounded-2xl border p-5"
+                  className="mx-2 rounded-xl border p-5"
                   style={{
                     backgroundColor: colors.bgCard,
                     borderColor: colors.border,
@@ -582,10 +583,13 @@ function AnalyticsItem({
   const percentage = total > 0 ? Math.round((value / total) * 100) : 0;
 
   return (
-    <View
-      className="w-[48%] rounded-xl border px-5 pb-4 pt-3"
+    <LinearGradient
+      colors={[bg + '88', bg + '22']}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 1, y: 1 }}
+      className="w-[48%] border px-5 pb-4 pt-3"
       style={{
-        backgroundColor: bg,
+        borderRadius: 10,
         borderColor: border,
       }}>
       <AppText size="heading" bold style={{ color: text }}>
@@ -612,6 +616,6 @@ function AnalyticsItem({
           }}
         />
       </View>
-    </View>
+    </LinearGradient>
   );
 }

@@ -7,7 +7,7 @@ import { useTheme } from "@/context/ThemeContext";
 import { db } from "@/lib/firebase";
 import { DateTimePickerAndroid } from "@react-native-community/datetimepicker";
 import { doc, getDoc } from "firebase/firestore";
-import { BookOpen, Calendar, ChevronRightCircle, Search, Users } from "lucide-react-native";
+import { Blocks, BookOpen, Calendar, ChevronRightCircle, Search, User } from "lucide-react-native";
 import { useEffect, useMemo, useState } from "react";
 import {
   FlatList,
@@ -71,6 +71,7 @@ export default function EmployeeTimetablePage() {
   const [teacherSlots, setTeacherSlots] = useState<any[]>([]);
   const [classSlots, setClassSlots] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [substitutions, setSubstitutions] = useState<any[]>([]);
 
   const [tab, setTab] = useState<"my" | "class">("my");
   const [view, setView] = useState<"day" | "week">("day");
@@ -115,9 +116,9 @@ export default function EmployeeTimetablePage() {
         setTeacherSlots(
           tSnap.exists()
             ? (tSnap.data().slots || []).map((slot: any) => ({
-                ...slot,
-                teacherId: schoolUser.uid
-              }))
+              ...slot,
+              teacherId: schoolUser.uid
+            }))
             : []
         );
       } finally {
@@ -126,6 +127,26 @@ export default function EmployeeTimetablePage() {
     }
     init();
   }, []);
+
+  useEffect(() => {
+    async function loadSubstitutions() {
+      const dateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+      const subRef = doc(
+        db,
+        "schools", schoolUser.schoolId,
+        "branches", schoolUser.currentBranch,
+        "timetable", "items", "substitutions_teacher",
+        `${schoolUser.uid}_${dateStr}`
+      );
+      try {
+        const snap = await getDoc(subRef);
+        setSubstitutions(snap.exists() ? snap.data().substitutions || [] : []);
+      } catch (e) {
+        setSubstitutions([]);
+      }
+    }
+    if (tab === "my") loadSubstitutions();
+  }, [date, tab]);
 
   async function loadClassTimetable() {
     if (!classId || !sectionId) {
@@ -145,16 +166,36 @@ export default function EmployeeTimetablePage() {
       const entries =
         snap.exists() && snap.data().days?.[dayCode]
           ? Object.values(snap.data().days[dayCode])
-              .flatMap((periodObj: any) =>
-                (periodObj.entries || []).map((entry: any) => ({
-                  ...entry,
-                  period: periodObj.period,
-                  classId,
-                  sectionId
-                }))
-              )
+            .flatMap((periodObj: any) =>
+              (periodObj.entries || []).map((entry: any) => ({
+                ...entry,
+                period: periodObj.period,
+                classId,
+                sectionId,
+                isSubstitution: false
+              }))
+            )
           : [];
-      setClassSlots(entries);
+
+      const dateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+      const subRef = doc(
+        db,
+        "schools", schoolUser.schoolId,
+        "branches", schoolUser.currentBranch,
+        "timetable", "items", "substitutions",
+        `${classId}_${sectionId}_${dateStr}`
+      );
+      const subSnap = await getDoc(subRef);
+      const subs = subSnap.exists() ? (subSnap.data().substitutions || []).map((s: any) => ({ ...s, isSubstitution: true, classId: subSnap.data().classId, sectionId: subSnap.data().sectionId })) : [];
+
+      const merged = [...entries];
+      subs.forEach((sub: any) => {
+        const idx = merged.findIndex(e => e.period === sub.period);
+        if (idx !== -1) merged[idx] = sub;
+        else merged.push(sub);
+      });
+
+      setClassSlots(merged.sort((a, b) => a.period - b.period));
     } finally {
       setLoading(false);
     }
@@ -164,15 +205,19 @@ export default function EmployeeTimetablePage() {
     () => (settings ? buildTimeline(settings) : {}),
     [settings]
   );
-  
+
   const classDayRows = useMemo(
     () => (settings ? buildRows(classSlots, settings) : []),
     [classSlots, settings]
   );
 
-  const myDay = teacherSlots
-    .filter(s => s.day === dayCode)
-    .sort((a, b) => a.period - b.period);
+  const myDay = useMemo(() => {
+    const regular = teacherSlots
+      .filter(s => s.day === dayCode)
+      .map(s => ({ ...s, isSubstitution: false }));
+    const subs = substitutions.map(s => ({ ...s, isSubstitution: true }));
+    return [...regular, ...subs].sort((a, b) => a.period - b.period);
+  }, [teacherSlots, substitutions, dayCode]);
 
   const myDayRows = useMemo(
     () => (settings ? buildRows(myDay, settings) : []),
@@ -197,9 +242,9 @@ export default function EmployeeTimetablePage() {
   const listData =
     tab === "my"
       ? view === "day"
-        ? myDayRows
-        : myWeek
-      : classDayRows;
+        ? (myDay.length > 0 ? myDayRows : [])
+        : (teacherSlots.length > 0 ? myWeek : [])
+      : (classSlots.length > 0 ? classDayRows : []);
 
   if (loading) return <Loading />;
 
@@ -207,45 +252,35 @@ export default function EmployeeTimetablePage() {
     <Screen scroll={false}>
       <Header title="Timetable" />
       <ScrollView>
-      <View
-        className="mx-5 mt-4 rounded-full"
-        style={{
-          backgroundColor: colors.bgCard,
-          padding: 4,
-          borderRadius: 999,
-          borderWidth: 1,
-          borderColor: colors.border,
-        }}
-      >
-        <View className="flex-row">
-          {[{ key: "my", label: "My Timetable", icon: BookOpen },
-            { key: "class", label: "Class", icon: Users }].map(
-            ({ key, label, icon: Icon }: any, index: number) => {
+        <View className="mx-6 mt-4">
+          <View
+            className="flex-row rounded-xl border p-1"
+            style={{
+              backgroundColor: colors.bgCard,
+              borderColor: colors.border,
+            }}
+          >
+            {[
+              { key: "my", label: "My Timetable", icon: User },
+              { key: "class", label: "Class", icon: BookOpen },
+            ].map(({ key, label, icon: Icon }: any) => {
               const isActive = tab === key;
-
               return (
                 <TouchableOpacity
                   key={key}
-                  onPress={() => setTab(key)}
-                  className="flex-1 flex-row items-center justify-center"
-                  activeOpacity={0.9}
+                  onPress={() => setTab(key as any)}
+                  activeOpacity={0.8}
+                  className="flex-1 flex-row items-center justify-center py-4 rounded-lg"
                   style={{
-                    paddingVertical: 10,
-                    borderRadius: 999,
                     backgroundColor: isActive ? colors.primarySoft : "transparent",
                   }}
                 >
-                  <Icon
-                    size={16}
-                    color={isActive ? colors.primary : colors.textMuted}
-                  />
+                  <Icon size={16} color={isActive ? colors.primary : colors.textMuted} />
                   <AppText
                     size="label"
                     semibold
-                    alwaysWhite={isActive}
                     style={{
-                      marginLeft: 6,
-                      letterSpacing: 0.3,
+                      marginLeft: 8,
                       color: isActive ? colors.primary : colors.textMuted,
                     }}
                   >
@@ -253,100 +288,107 @@ export default function EmployeeTimetablePage() {
                   </AppText>
                 </TouchableOpacity>
               );
-            }
-          )}
-        </View>
-      </View>
-      {(view != "week" || tab == "class") && (
-        <View className="mx-7 mt-4">
-          <AppText size="label">Date</AppText>
-          <TouchableOpacity onPress={openDatePicker}
-            className="px-4 py-3 mt-1 rounded-xl border flex-row justify-between"
-            style={{ backgroundColor: colors.bgCard, borderColor: colors.border }}>
-            <AppText>{date.toDateString()}</AppText>
-            <Calendar size={16} color={colors.textMuted} />
-          </TouchableOpacity>
-        </View>
-      )}
-      {tab === "my" && (
-        <View className="flex-row mx-7 mt-3 gap-2">
-          {["day", "week"].map(v => (
-            <TouchableOpacity key={v}
-              onPress={() => setView(v as any)}
-              className="flex-1 py-3 rounded-xl items-center"
-              style={{
-                backgroundColor: view === v ? colors.primary : colors.bgCard,
-                borderWidth: 1,
-                borderColor: colors.border,
-              }}>
-                {view === v ? (
-                  <AppText size="label" semibold alwaysWhite>{v.toUpperCase()}</AppText>
-                ) : (
-                  <AppText size="label" semibold>{v.toUpperCase()}</AppText>
-                )}
-            </TouchableOpacity>
-          ))}
-        </View>
-      )}
-      {tab === "class" && (
-        <>
-          <View className="flex-row mx-7 mt-3 gap-4">
-            <View className="flex-1 gap-1">
-              <AppText size="label">Class</AppText>
-              <View className="flex-row">
-              <TouchableOpacity
-                onPress={() => setShowClassPicker(true)}
-                className="flex-1 px-4 py-3 rounded-xl border"
-                style={{ backgroundColor: colors.bgCard, borderColor: colors.border }}>
-                <AppText>
-                  {classData.find((c: any) => c.id === classId)?.name || "Select Class"}
-                </AppText>
-              </TouchableOpacity>
-              </View>
-            </View>
-            <View className="flex-1 gap-1">
-              <AppText size="label">Section</AppText>
-              <View className="flex-row">
-              <TouchableOpacity
-                disabled={!classId}
-                onPress={() => setShowSectionPicker(true)}
-                className="flex-1 px-4 py-3 rounded-xl border"
-                style={{
-                  backgroundColor: colors.bgCard,
-                  borderColor: colors.border,
-                  opacity: classId ? 1 : 0.5,
-                }}>
-                <AppText>
-                  {classData.find((c: any) => c.id === classId)
-                    ?.sections.find((s: any) => s.id === sectionId)?.name || "Section"}
-                </AppText>
-              </TouchableOpacity>
-              </View>
-            </View>
+            })}
           </View>
-          <TouchableOpacity
-            onPress={loadClassTimetable}
-            className="mx-7 mt-4 py-3 rounded-xl items-center flex-row justify-center gap-2"
-            style={{ backgroundColor: colors.primary }}>
-              <Search size={17} color={'#fff'} />
-              <AppText semibold style={{ color: "#fff" }}>
-                View Timetable
-              </AppText>
-          </TouchableOpacity>
-        </>
-      )}
-      <View className="flex-1 px-5 mt-6">
-        <FlatList
-          data={listData}
-          keyExtractor={(_, i) => String(i)}
-          scrollEnabled={false}
-          contentContainerStyle={{ gap: 10, paddingBottom: 30 }}
-          renderItem={({ item }) => {
+
+          <View className="mt-3 p-5 rounded-2xl border" style={{ backgroundColor: colors.bgCard, borderColor: colors.border }}>
+            {(view !== "week" || tab === "class") && (
+              <View>
+                <AppText size="subtext" semibold muted>Selected Date</AppText>
+                <TouchableOpacity
+                  onPress={openDatePicker}
+                  activeOpacity={0.8}
+                  className="flex-row items-center justify-between mt-1 px-4 py-3 rounded-xl border"
+                  style={{ backgroundColor: colors.bg, borderColor: colors.border }}
+                >
+                  <View className="flex-row items-center gap-2">
+                    <Calendar size={16} color={colors.primary} />
+                    <AppText semibold>{date.toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' })}</AppText>
+                  </View>
+                  <AppText size="min" semibold primary>Change</AppText>
+                </TouchableOpacity>
+              </View>
+            )}
+
+            {tab === "my" && (
+              <View className={view !== "week" ? "mt-4" : ""}>
+                <AppText size="subtext" semibold muted>Viewing Format</AppText>
+                <View className="flex-row gap-2 mt-1">
+                  {["day", "week"].map((v) => (
+                    <TouchableOpacity
+                      key={v}
+                      onPress={() => setView(v as any)}
+                      className="flex-1 py-2.5 rounded-lg items-center border"
+                      style={{
+                        backgroundColor: view === v ? colors.primary : colors.bg,
+                        borderColor: view === v ? colors.primary : colors.border,
+                      }}
+                    >
+                      <AppText size="label" semibold style={{ color: view === v ? "#fff" : colors.textMuted, textTransform: "capitalize" }}>
+                        {v} View
+                      </AppText>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </View>
+            )}
+
+            {tab === "class" && (
+              <View className="mt-3">
+                <AppText size="subtext" semibold muted>Select Class & Section</AppText>
+                <View className="flex-row gap-2 mt-1">
+                  <TouchableOpacity
+                    onPress={() => setShowClassPicker(true)}
+                    className="flex-1 px-4 py-3 rounded-xl border flex-row justify-between items-center"
+                    style={{ backgroundColor: colors.bg, borderColor: colors.border }}
+                  >
+                    <AppText semibold numberOfLines={1}>
+                      {classData.find((c: any) => c.id === classId)?.name || "Class"}
+                    </AppText>
+                    <AppText size="min" muted>▼</AppText>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    disabled={!classId}
+                    onPress={() => setShowSectionPicker(true)}
+                    className="flex-1 px-4 py-3 rounded-xl border flex-row justify-between items-center"
+                    style={{
+                      backgroundColor: colors.bg,
+                      borderColor: colors.border,
+                      opacity: classId ? 1 : 0.5,
+                    }}
+                  >
+                    <AppText semibold numberOfLines={1}>
+                      {classData.find((c: any) => c.id === classId)?.sections.find((s: any) => s.id === sectionId)?.name || "Section"}
+                    </AppText>
+                    <AppText size="min" muted>▼</AppText>
+                  </TouchableOpacity>
+                </View>
+
+                <TouchableOpacity
+                  onPress={loadClassTimetable}
+                  activeOpacity={0.9}
+                  className="mt-4 py-3 rounded-xl items-center flex-row justify-center gap-2"
+                  style={{ backgroundColor: colors.primary }}
+                >
+                  <Search size={16} color="#fff" />
+                  <AppText semibold style={{ color: "#fff" }}>Show Timetable</AppText>
+                </TouchableOpacity>
+              </View>
+            )}
+          </View>
+        </View>
+        <View className="flex-1 px-5 mt-6">
+          <FlatList
+            data={listData}
+            keyExtractor={(_, i) => String(i)}
+            scrollEnabled={false}
+            contentContainerStyle={{ gap: 10, paddingBottom: 30 }}
+            renderItem={({ item }) => {
               if (!listData || (listData.length === 1 && item?.type == "break")) return null;
               if (item?.type === "break") {
                 return <BreakRow breakItem={item} />;
               }
-              if(view === "week" && tab === "my") { 
+              if (view === "week" && tab === "my") {
                 return (
                   <View className="gap-3 mt-1">
                     <View className="py-2 px-4 rounded-xl items-center justify-center" style={{ backgroundColor: colors.primarySoft, borderWidth: 1, borderColor: colors.primary }}>
@@ -360,31 +402,42 @@ export default function EmployeeTimetablePage() {
               }
               return <PeriodCard slot={item.slot ?? item} timeline={timeline} />;
             }
-          }
-          ListEmptyComponent={
-            <View className="items-center py-20">
-              <AppText muted>No timetable found</AppText>
-            </View>
-          }
+            }
+            ListEmptyComponent={
+              <View className="items-center py-12 rounded-xl"
+                style={{
+                  backgroundColor: colors.bgCard,
+                  borderWidth: 1,
+                  borderColor: colors.border,
+                }}>
+                <Blocks size={32} color={colors.statusAtext} />
+                <AppText bold muted className="mt-3">
+                  No timetable found!
+                </AppText>
+                <AppText size="subtext" muted>
+                  Try searching for different date!
+                </AppText>
+              </View>
+            }
+          />
+        </View>
+        <PickerModal
+          visible={showClassPicker}
+          onClose={() => setShowClassPicker(false)}
+          title="Select Class"
+          data={classData}
+          onSelect={(c: any) => {
+            setClassId(c.id);
+            setSectionId("");
+          }}
         />
-      </View>
-      <PickerModal
-        visible={showClassPicker}
-        onClose={() => setShowClassPicker(false)}
-        title="Select Class"
-        data={classData}
-        onSelect={(c: any) => {
-          setClassId(c.id);
-          setSectionId("");
-        }}
-      />
-      <PickerModal
-        visible={showSectionPicker}
-        onClose={() => setShowSectionPicker(false)}
-        title="Select Section"
-        data={classData.find((c: any) => c.id === classId)?.sections || []}
-        onSelect={(s: any) => setSectionId(s.id)}
-      />
+        <PickerModal
+          visible={showSectionPicker}
+          onClose={() => setShowSectionPicker(false)}
+          title="Select Section"
+          data={classData.find((c: any) => c.id === classId)?.sections || []}
+          onSelect={(s: any) => setSectionId(s.id)}
+        />
       </ScrollView>
     </Screen>
   );
@@ -402,8 +455,8 @@ function PeriodCard({ slot, timeline }: any) {
   const getClassName = (id: any) => classData.find((c: any) => c.id === id)?.name;
   const getSection = (cid: any, sid: any) => classData?.find((c: any) => c.id === cid)?.sections.find((s: any) => s.id == sid)?.name;
   const capitalizeWords = (str: string) => {
-    if(!str) return; 
-    return str.replace(/\w\S*/g, txt => 
+    if (!str) return;
+    return str.replace(/\w\S*/g, txt =>
       txt.charAt(0).toUpperCase() + txt.slice(1).toLowerCase()
     );
   }
@@ -424,12 +477,19 @@ function PeriodCard({ slot, timeline }: any) {
         </AppText>
       </View>
       <View className="flex-1">
-        <AppText size="body" semibold>
-          {getClassName(slot.classId)} {getSection(slot.classId, slot.sectionId)} -{" "}
-          {getSubjectName(slot.subjectId)}
-        </AppText>
+        <View className="flex-row items-center justify-between">
+          <AppText size="body" semibold className="flex-1">
+            {getClassName(slot.classId)} {getSection(slot.classId, slot.sectionId)} -{" "}
+            {getSubjectName(slot.subjectId)}
+          </AppText>
+          {slot.isSubstitution && (
+            <View className="px-2 py-0.5 rounded-full" style={{ backgroundColor: colors.statusPbg }}>
+              <AppText size="min" semibold style={{ color: colors.statusPtext }}>Substitution</AppText>
+            </View>
+          )}
+        </View>
         <AppText size="subtext" muted semibold>
-          {capitalizeWords(getTeacherName(slot.teacherId))}
+          {capitalizeWords(getTeacherName(slot.teacherId || slot.substituteTeacherId))}
         </AppText>
         <AppText size="min" muted semibold>
           {minutesToTime(time.start)} – {minutesToTime(time.end)}
@@ -459,26 +519,26 @@ function PickerModal({ visible, onClose, title, data, onSelect }: any) {
       <View className="flex-1 justify-end bg-black/60">
         <View className="rounded-t-3xl p-7 max-h-[70vh]"
           style={{ backgroundColor: colors.bgCard }}>
-            <View className="flex-row items-center gap-2">
-              <ChevronRightCircle size={18} color={colors.primary} />
-              <AppText size="title" semibold>{title}</AppText>
-            </View>
-            <FlatList
-              data={data}
-              className="mt-3"
-              keyExtractor={(i: any) => i.id}
-              renderItem={({ item }) => (
-                <TouchableOpacity
-                  onPress={() => {
-                    onSelect(item);
-                    onClose();
-                  }}
-                  className="py-4 px-5 border-b"
-                  style={{ borderColor: colors.border }}>
-                  <AppText semibold>{item.name}</AppText>
-                </TouchableOpacity>
-              )}
-            />
+          <View className="flex-row items-center gap-2">
+            <ChevronRightCircle size={18} color={colors.primary} />
+            <AppText size="title" semibold>{title}</AppText>
+          </View>
+          <FlatList
+            data={data}
+            className="mt-3"
+            keyExtractor={(i: any) => i.id}
+            renderItem={({ item }) => (
+              <TouchableOpacity
+                onPress={() => {
+                  onSelect(item);
+                  onClose();
+                }}
+                className="py-4 px-5 border-b"
+                style={{ borderColor: colors.border }}>
+                <AppText semibold>{item.name}</AppText>
+              </TouchableOpacity>
+            )}
+          />
         </View>
       </View>
     </Modal>

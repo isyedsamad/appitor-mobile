@@ -8,7 +8,7 @@ import { useAuth } from '@/context/AuthContext';
 import { useTheme } from '@/context/ThemeContext';
 import { db } from '@/lib/firebase';
 import { doc, getDoc } from 'firebase/firestore';
-import { CalendarClock, CircleOff } from 'lucide-react-native';
+import { Blocks, CalendarClock } from 'lucide-react-native';
 import { useEffect, useMemo, useState } from 'react';
 import { FlatList, ScrollView, TouchableOpacity, View } from 'react-native';
 import Toast from 'react-native-toast-message';
@@ -191,13 +191,18 @@ export default function EmployeeAssignmentPage() {
             contentContainerStyle={{ padding: 16, gap: 14 }}
             ListEmptyComponent={
               assignments && (
-                <View className="items-center px-10 py-12">
-                  <CircleOff size={32} color={colors.primary} />
-                  <AppText semibold className="mt-5">
-                    No Assignment found!
+                <View className="items-center py-12 rounded-xl"
+                  style={{
+                    backgroundColor: colors.bgCard,
+                    borderWidth: 1,
+                    borderColor: colors.border,
+                  }}>
+                  <Blocks size={32} color={colors.statusAtext} />
+                  <AppText bold muted className="mt-3">
+                    No assignment found!
                   </AppText>
-                  <AppText size="subtext" muted semibold className="text-center">
-                    No assignment found for the selected filter.
+                  <AppText size="subtext" muted>
+                    Try searching for different filter!
                   </AppText>
                 </View>
               )

@@ -9,6 +9,7 @@ import secureAxios from '@/lib/secureAxios';
 import { doc, getDoc } from 'firebase/firestore';
 import {
   AlertTriangle,
+  Blocks,
   ChevronRight,
   ChevronRightCircle,
   CircleX,
@@ -245,8 +246,19 @@ export default function EmployeeComplaintPage() {
 
         <View className="mt-5 px-5">
           {complaints.length === 0 ? (
-            <View className="items-center py-20">
-              <AppText muted>No complaints found</AppText>
+            <View className="items-center py-12 rounded-xl"
+              style={{
+                backgroundColor: colors.bgCard,
+                borderWidth: 1,
+                borderColor: colors.border,
+              }}>
+              <Blocks size={32} color={colors.statusAtext} />
+              <AppText bold muted className="mt-3">
+                No complaints found!
+              </AppText>
+              <AppText size="subtext" muted>
+                Try searching for different session!
+              </AppText>
             </View>
           ) : (
             complaints.map((c) => {
@@ -438,7 +450,7 @@ function SummaryItem({ label, value, variant }: any) {
       };
   return (
     <View
-      className="flex-1 rounded-xl border px-5 py-3"
+      className="flex-1 rounded-lg border px-5 py-3"
       style={{
         backgroundColor: colors.bg,
         borderColor: colors.border,

@@ -11,7 +11,7 @@ import {
   startAfter,
   where,
 } from 'firebase/firestore';
-import { Download, History, LineSquiggle, TrendingUp } from 'lucide-react-native';
+import { Blocks, Download, History, LineSquiggle, TrendingUp } from 'lucide-react-native';
 import React, { useEffect, useState } from 'react';
 import { ScrollView, TouchableOpacity, View } from 'react-native';
 import Toast from 'react-native-toast-message';
@@ -668,6 +668,22 @@ export default function StudentFeePortal() {
                   </AppText>
                 </TouchableOpacity>
               )}
+            </View>
+          )}
+          {!summary && (
+            <View className="items-center py-12 mx-5 mt-4 rounded-xl"
+              style={{
+                backgroundColor: colors.bgCard,
+                borderWidth: 1,
+                borderColor: colors.border,
+              }}>
+              <Blocks size={32} color={colors.statusAtext} />
+              <AppText bold muted className="mt-3">
+                Fee Module not found!
+              </AppText>
+              <AppText size="subtext" muted>
+                Try searching for different session!
+              </AppText>
             </View>
           )}
         </ScrollView>

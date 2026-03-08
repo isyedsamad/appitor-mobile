@@ -11,6 +11,7 @@ import DateTimePicker, { DateTimePickerAndroid } from '@react-native-community/d
 import { useRouter } from 'expo-router';
 import { doc, getDoc } from 'firebase/firestore';
 import {
+  Blocks,
   BookOpen,
   Calendar,
   ChevronRight,
@@ -18,7 +19,7 @@ import {
   Plus,
   PlusCircle,
   Search,
-  Users,
+  User
 } from 'lucide-react-native';
 import { useEffect, useState } from 'react';
 import {
@@ -108,7 +109,7 @@ export default function EmployeeHomeworkPage() {
   const selectedSubject = subjectData?.find((s: any) => s.id === subjectId);
 
   const canCreateHomework = schoolUser
-    ? hasPermission(schoolUser, 'learning.create', false)
+    ? hasPermission(schoolUser, 'learning.homework.manage', false)
     : false;
   const getSubjectName = (id: any) => subjectData.find((s: any) => s.id === id)?.name;
   const getClassName = (id: any) => classData.find((c: any) => c.id === id)?.name;
@@ -147,41 +148,63 @@ export default function EmployeeHomeworkPage() {
         setPeriodSet(newPeriods);
         setDAYS_MAP(snap.data().workingDays);
         setTimetableActive(snap.data().status === 'active');
-      } catch {}
+      } catch { }
     }
     loadTimetableSettings();
   }, []);
 
   useEffect(() => {
-    if (!openAdd || !timetableActive || timetableSlots.length > 0) return;
+    if (!openAdd || !timetableActive) return;
     async function loadTeacherSlots() {
       setLoading(true);
       try {
-        const ref = doc(
+        const dateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+        const teacherRef = doc(
           db,
-          'schools',
-          schoolUser.schoolId,
-          'branches',
-          schoolUser.currentBranch,
-          'timetable',
-          'items',
-          'teachers',
+          'schools', schoolUser.schoolId,
+          'branches', schoolUser.currentBranch,
+          'timetable', 'items', 'teachers',
           schoolUser.uid
         );
-        const snap = await getDoc(ref);
-        if (!snap.exists()) {
-          setTimetableSlots([]);
-          return;
+        const subRef = doc(
+          db,
+          'schools', schoolUser.schoolId,
+          'branches', schoolUser.currentBranch,
+          'timetable', 'items', 'substitutions_teacher',
+          `${schoolUser.uid}_${dateStr}`
+        );
+
+        const [teacherSnap, subSnap] = await Promise.all([
+          getDoc(teacherRef),
+          getDoc(subRef)
+        ]);
+
+        const subs = subSnap.exists()
+          ? (subSnap.data().substitutions || []).map((s: any) => ({ ...s, isSubstitution: true }))
+          : [];
+
+        let regularSlots = [];
+        if (teacherSnap.exists()) {
+          const today = DAYS_MAP[date.getDay() === 0 ? 6 : date.getDay() - 1];
+          regularSlots = (teacherSnap.data().slots || [])
+            .filter((s: any) => s.day === today)
+            .map((s: any) => ({ ...s, isSubstitution: false }));
         }
-        const today = DAYS_MAP[new Date().getDay() - 1];
-        const slots = (snap.data().slots || []).filter((s: any) => s.day === today);
-        setTimetableSlots(slots);
+
+        const merged = [...regularSlots];
+        subs.forEach((sub: any) => {
+          const idx = merged.findIndex(e => e.period === sub.period);
+          if (idx !== -1) merged[idx] = sub;
+          else merged.push(sub);
+        });
+
+        setTimetableSlots(merged.sort((a, b) => a.period - b.period));
       } finally {
         setLoading(false);
       }
     }
     loadTeacherSlots();
-  }, [openAdd, timetableActive]);
+  }, [openAdd, timetableActive, date]);
 
   async function searchHomework(refresh: boolean) {
     if (tab == 'my' && myHomework.length > 0 && !refresh) {
@@ -288,12 +311,12 @@ export default function EmployeeHomeworkPage() {
         timetable: timetableActive
           ? selectedSlot
           : {
-              period: period,
-              classId,
-              sectionId,
-              subjectId,
-              teacherId: schoolUser.uid,
-            },
+            period: period,
+            classId,
+            sectionId,
+            subjectId,
+            teacherId: schoolUser.uid,
+          },
       });
       Toast.show({
         type: 'success',
@@ -351,7 +374,7 @@ export default function EmployeeHomeworkPage() {
               style={{
                 backgroundColor: tab === 'my' ? colors.primarySoft : 'transparent',
               }}>
-              <BookOpen size={14} color={tab === 'my' ? colors.primary : colors.textMuted} />
+              <User fill={tab === 'my' ? colors.primary : colors.textMuted} size={14} color={tab === 'my' ? colors.primary : colors.textMuted} />
               <AppText
                 size="label"
                 semibold
@@ -368,7 +391,7 @@ export default function EmployeeHomeworkPage() {
               style={{
                 backgroundColor: tab === 'all' ? colors.primarySoft : 'transparent',
               }}>
-              <Users size={14} color={tab === 'all' ? colors.primary : colors.textMuted} />
+              <BookOpen size={14} color={tab === 'all' ? colors.primary : colors.textMuted} />
               <AppText
                 size="label"
                 semibold
@@ -533,10 +556,18 @@ export default function EmployeeHomeworkPage() {
 
           <View className="mt-6 flex-1 px-5">
             {homework.length === 0 ? (
-              <View className="items-center py-16">
-                <BookOpen size={32} color={colors.textMuted} />
-                <AppText muted className="mt-3">
+              <View className="items-center py-12 rounded-xl"
+                style={{
+                  backgroundColor: colors.bgCard,
+                  borderWidth: 1,
+                  borderColor: colors.border,
+                }}>
+                <Blocks size={32} color={colors.statusAtext} />
+                <AppText bold muted className="mt-3">
                   No homework found!
+                </AppText>
+                <AppText size="subtext" muted>
+                  Try searching for different date!
                 </AppText>
               </View>
             ) : (
@@ -662,7 +693,21 @@ export default function EmployeeHomeworkPage() {
                                   </AppText>
                                 </View>
                                 <View className="flex-1">
-                                  <AppText bold>{getSubjectName(s.subjectId)}</AppText>
+                                  <View className="flex-row items-center justify-between">
+                                    <AppText bold>{getSubjectName(s.subjectId)}</AppText>
+                                    {s.isSubstitution && (
+                                      <View
+                                        className="rounded-full px-2 py-0.5"
+                                        style={{ backgroundColor: colors.statusPbg }}>
+                                        <AppText
+                                          size="min"
+                                          semibold
+                                          style={{ color: colors.statusPtext }}>
+                                          Substitution
+                                        </AppText>
+                                      </View>
+                                    )}
+                                  </View>
                                   <AppText size="min" semibold muted>
                                     Period: P{s.period}
                                   </AppText>
@@ -879,7 +924,7 @@ export default function EmployeeHomeworkPage() {
                 </View>
                 <FlatList
                   data={periodSet}
-                  keyExtractor={(s: any) => s.id}
+                  keyExtractor={(s: any) => s}
                   className="mt-4"
                   renderItem={({ item }) => (
                     <TouchableOpacity

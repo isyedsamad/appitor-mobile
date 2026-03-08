@@ -12,14 +12,14 @@ import secureAxios from '@/lib/secureAxios';
 import { DateTimePickerAndroid } from '@react-native-community/datetimepicker';
 import { collection, doc, getDoc, getDocs, query, where } from 'firebase/firestore';
 import {
-  BookOpen,
+  Blocks,
   Calendar,
   CalendarClock,
   ChevronRightCircle,
   Plus,
   PlusCircle,
   Search,
-  Trash2,
+  Trash2
 } from 'lucide-react-native';
 import { useEffect, useMemo, useState } from 'react';
 import {
@@ -247,7 +247,7 @@ export default function EmployeeAssignmentPage() {
     setDueDate(d);
     setForm((f: any) => ({
       ...f,
-      dueDate: d?.toISOString().slice(0, 10),
+      dueDate: d ? `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}` : null,
     }));
     if (Platform.OS !== 'android') setShowDatePicker(false);
   };
@@ -334,8 +334,8 @@ export default function EmployeeAssignmentPage() {
               }}
             />
           </View>
-          <View className="mx-7 mt-5 gap-4">
-            <View className="flex flex-row items-center justify-center gap-4">
+          <View className="mx-7 mt-5 gap-3">
+            <View className="flex flex-row items-center justify-center gap-3">
               <View className="flex-1">
                 <AppText size="label" muted>
                   Class
@@ -411,14 +411,20 @@ export default function EmployeeAssignmentPage() {
             keyExtractor={(_, i) => String(i)}
             contentContainerStyle={{ padding: 16, gap: 14 }}
             ListEmptyComponent={
-              assignments && (
-                <View className="items-center py-20">
-                  <BookOpen size={32} color={colors.textMuted} />
-                  <AppText muted className="mt-3">
-                    No assignments found
-                  </AppText>
-                </View>
-              )
+              <View className="items-center py-12 rounded-xl"
+                style={{
+                  backgroundColor: colors.bgCard,
+                  borderWidth: 1,
+                  borderColor: colors.border,
+                }}>
+                <Blocks size={32} color={colors.statusAtext} />
+                <AppText bold muted className="mt-3">
+                  No assignments found!
+                </AppText>
+                <AppText size="subtext" muted>
+                  Try searching for different class!
+                </AppText>
+              </View>
             }
             renderItem={({ item }) => {
               const expired = isExpired(item.dueDate);

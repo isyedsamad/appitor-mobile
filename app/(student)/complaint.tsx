@@ -9,12 +9,12 @@ import secureAxios from '@/lib/secureAxios';
 import { doc, getDoc } from 'firebase/firestore';
 import {
   AlertTriangle,
+  Blocks,
   ChevronRight,
   ChevronRightCircle,
-  CircleOff,
   CircleX,
   Plus,
-  Trash2,
+  Trash2
 } from 'lucide-react-native';
 import { useEffect, useMemo, useState } from 'react';
 import { Modal, ScrollView, TextInput, TouchableOpacity, View } from 'react-native';
@@ -253,12 +253,17 @@ export default function StudentComplaintPage() {
 
         <View className="mt-5 px-5">
           {complaints.length === 0 ? (
-            <View className="items-center px-10 py-12">
-              <CircleOff size={32} color={colors.primary} />
-              <AppText semibold className="mt-5">
-                No Complaint found!
+            <View className="items-center py-12 rounded-xl"
+              style={{
+                backgroundColor: colors.bgCard,
+                borderWidth: 1,
+                borderColor: colors.border,
+              }}>
+              <Blocks size={32} color={colors.statusAtext} />
+              <AppText bold muted className="mt-3">
+                No complaint found!
               </AppText>
-              <AppText size="subtext" muted semibold className="text-center">
+              <AppText size="subtext" muted>
                 If something’s bothering you, we’re here to listen!
               </AppText>
             </View>

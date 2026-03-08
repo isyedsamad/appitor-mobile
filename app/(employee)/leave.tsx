@@ -8,7 +8,7 @@ import { db } from "@/lib/firebase";
 import secureAxios from "@/lib/secureAxios";
 import { DateTimePickerAndroid } from "@react-native-community/datetimepicker";
 import { doc, getDoc } from "firebase/firestore";
-import { AlertTriangle, CalendarRange, ChevronRight, ChevronRightCircle, CircleX, Plus, Trash2 } from "lucide-react-native";
+import { AlertTriangle, Blocks, CalendarRange, ChevronRight, ChevronRightCircle, CircleX, Plus, Trash2 } from "lucide-react-native";
 import { useEffect, useMemo, useState } from "react";
 import {
   Modal,
@@ -294,8 +294,19 @@ export default function EmployeeLeavePage() {
 
         <View className="px-5">
           {leaves.length === 0 ? (
-            <View className="items-center py-20">
-              <AppText muted>No leave requests found</AppText>
+            <View className="items-center py-12 rounded-xl"
+              style={{
+                backgroundColor: colors.bgCard,
+                borderWidth: 1,
+                borderColor: colors.border,
+              }}>
+              <Blocks size={32} color={colors.statusAtext} />
+              <AppText bold muted className="mt-3">
+                No leave requests found!
+              </AppText>
+              <AppText size="subtext" muted>
+                Try searching for different session!
+              </AppText>
             </View>
           ) : (
             leaves.map((l: any) => {
@@ -567,7 +578,7 @@ function SummaryItem({ label, value, variant }: any) {
       };
   return (
     <View
-      className="flex-1 px-5 py-3 rounded-xl border"
+      className="flex-1 px-5 py-3 rounded-lg border"
       style={{
         backgroundColor: colors.bg,
         borderColor: colors.border,

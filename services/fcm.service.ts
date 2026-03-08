@@ -14,12 +14,12 @@ export async function registerFcmToken(context: {
 }) {
   const allowed = await requestNotificationPermission();
   if (!allowed) {
-    Toast.show({ type: 'error', text1: 'Push Notification', text2: 'Permission denied' });
+    // Toast.show({ type: 'error', text1: 'Push Notification', text2: 'Permission denied' });
     return;
   }
   const token = await getFcmToken();
   if (!token) {
-    Toast.show({ type: 'error', text1: 'Push Notification', text2: 'Failed to generate token' });
+    // Toast.show({ type: 'error', text1: 'Push Notification', text2: 'Failed to generate token' });
     return;
   }
   // const lastToken = await AsyncStorage.getItem('FCM_TOKEN');
@@ -38,7 +38,7 @@ export async function registerFcmToken(context: {
       lastSeenAt: serverTimestamp(),
     });
     await AsyncStorage.setItem('FCM_TOKEN', token);
-    Toast.show({ type: 'success', text1: 'Push Notification', text2: 'Registered successfully' });
+    // Toast.show({ type: 'success', text1: 'Push Notification', text2: 'Registered successfully' });
   } catch (e) {
     Toast.show({ type: 'error', text1: 'Push Notification', text2: 'Firestore Error: ' + e });
   }

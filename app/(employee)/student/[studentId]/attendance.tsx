@@ -22,8 +22,8 @@ import Toast from "react-native-toast-message";
 const screenWidth = Dimensions.get("window").width;
 
 const MONTHS = [
-  "April","May","June","July","August","September",
-  "October","November","December","January","February","March"
+  "April", "May", "June", "July", "August", "September",
+  "October", "November", "December", "January", "February", "March"
 ];
 
 const getMonthKey = (year: number, monthIndex: number) =>
@@ -37,8 +37,8 @@ export default function StudentAttendancePage() {
   const { colors } = useTheme();
   const { studentId } = useLocalSearchParams<{ studentId: string }>();
   const [student, setStudent] = useState<any>(null);
-  const [sessions, setSessions] = useState<any[]>([]);
-  const [session, setSession] = useState("");
+  const [sessions, setSessions] = useState<any[]>(schoolUser?.sessions || []);
+  const [session, setSession] = useState(schoolUser?.currentSession || sessions[0] || "");
   const [sessionData, setSessionData] = useState<any>(null);
   const [monthDays, setMonthDays] = useState<any>(null);
   const [selectedMonth, setSelectedMonth] = useState<any>(null);
@@ -62,35 +62,6 @@ export default function StudentAttendancePage() {
     }
     loadStudent();
   }, [studentId]);
-
-  useEffect(() => {
-    async function loadSessions() {
-      setLoading(true);
-      try {
-        const ref = doc(
-          db,
-          "schools",
-          schoolUser.schoolId,
-          "settings",
-          "academic"
-        );
-        const snap = await getDoc(ref);
-        if (!snap.exists()) return;
-        const data = snap.data();
-        setSessions(data.sessions || []);
-        setSession(data.currentSession);
-      } catch (err: any) {
-        Toast.show({
-          type: "error",
-          text1: "Failed to Load Sessions",
-          text2: String(err),
-        });
-      } finally {
-        setLoading(false);
-      }
-    }
-    loadSessions();
-  }, []);
 
   useEffect(() => {
     if (!session) return;
@@ -127,7 +98,7 @@ export default function StudentAttendancePage() {
   }, [sessionData]);
 
   const graphData = useMemo(() => {
-    if(!sessionData || !session) return;
+    if (!sessionData || !session) return;
     const labels: string[] = [];
     const values: number[] = [];
     MONTHS.forEach((m, i) => {
@@ -153,13 +124,13 @@ export default function StudentAttendancePage() {
   }));
 
   const getDaysInMonth = (key: string) => {
-    if(!key) return 0;
+    if (!key) return 0;
     const [y, m] = key.split("-").map(Number);
     return new Date(y, m, 0).getDate();
   };
 
   const formatMonthKey = (key: string) => {
-    if(!key) return;
+    if (!key) return;
     const [y, m] = key.split("-").map(Number);
     return new Date(y, m - 1).toLocaleDateString("en-IN", {
       month: "long",
@@ -175,9 +146,9 @@ export default function StudentAttendancePage() {
     classData
       .find((c: any) => c.id === student.className)
       ?.sections.find((s: any) => s.id === student.section)?.name;
-  
-  const capitalizeWords = (str: string) => 
-    str.replace(/\w\S*/g, txt => 
+
+  const capitalizeWords = (str: string) =>
+    str.replace(/\w\S*/g, txt =>
       txt.charAt(0).toUpperCase() + txt.slice(1).toLowerCase()
     );
 
@@ -185,7 +156,7 @@ export default function StudentAttendancePage() {
     <Screen scroll={false}>
       <Header title="Student Attendance" />
       <ScrollView>
-      <View
+        <View
           className="mx-5 mt-5 p-5 rounded-2xl"
           style={{ backgroundColor: colors.bgCard, borderWidth: 1, borderColor: colors.border }}
         >
@@ -329,7 +300,7 @@ export default function StudentAttendancePage() {
                   setSelectedMonth({ key });
                   setDaysInMonth(getDaysInMonth(key));
                   setMonthDays(null);
-                  if(total == 0) return;
+                  if (total == 0) return;
                   setLoading(true);
                   try {
                     const ref = doc(
@@ -386,7 +357,8 @@ export default function StudentAttendancePage() {
             );
           })}
         </View>
-        <Modal visible={!!selectedMonth} transparent animationType="slide">
+        <Modal visible={!!selectedMonth} transparent animationType="slide"
+          onRequestClose={() => setSelectedMonth(null)}>
           <View className="flex-1 justify-end bg-black/60">
             <View className="rounded-t-3xl p-8 max-h-[80vh]" style={{ backgroundColor: colors.bgCard }}>
               <View className="flex-row justify-between mb-4">
@@ -417,24 +389,24 @@ export default function StudentAttendancePage() {
                   const status = monthDays?.[day];
                   const bg =
                     status === "P" ? colors.statusPbg :
-                    status === "A" ? colors.statusAbg :
-                    status === "L" ? colors.statusLbg :
-                    status === "M" ? colors.statusMbg :
-                    colors.bg;
+                      status === "A" ? colors.statusAbg :
+                        status === "L" ? colors.statusLbg :
+                          status === "M" ? colors.statusMbg :
+                            colors.bg;
 
                   const text =
                     status === "P" ? colors.statusPtext :
-                    status === "A" ? colors.statusAtext :
-                    status === "L" ? colors.statusLtext :
-                    status === "M" ? colors.statusMtext :
-                    colors.text;
+                      status === "A" ? colors.statusAtext :
+                        status === "L" ? colors.statusLtext :
+                          status === "M" ? colors.statusMtext :
+                            colors.text;
 
                   const border =
                     status === "P" ? colors.statusPborder :
-                    status === "A" ? colors.statusAborder :
-                    status === "L" ? colors.statusLborder :
-                    status === "M" ? colors.statusMborder :
-                    colors.border;
+                      status === "A" ? colors.statusAborder :
+                        status === "L" ? colors.statusLborder :
+                          status === "M" ? colors.statusMborder :
+                            colors.border;
 
                   return (
                     <View

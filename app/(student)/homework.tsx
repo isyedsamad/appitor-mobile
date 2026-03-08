@@ -8,7 +8,7 @@ import { db } from '@/lib/firebase';
 import DateTimePicker, { DateTimePickerAndroid } from '@react-native-community/datetimepicker';
 import { useRouter } from 'expo-router';
 import { doc, getDoc } from 'firebase/firestore';
-import { Calendar, CircleOff, Search } from 'lucide-react-native';
+import { Blocks, Calendar, Search } from 'lucide-react-native';
 import { useEffect, useState } from 'react';
 import { FlatList, Platform, ScrollView, TouchableOpacity, View } from 'react-native';
 
@@ -98,7 +98,7 @@ export default function EmployeeHomeworkPage() {
   }
 
   useEffect(() => {
-    setHomework([]);
+    searchHomework(true);
   }, [date]);
 
   const capitalizeWords = (str: string) => {
@@ -149,13 +149,18 @@ export default function EmployeeHomeworkPage() {
 
           <View className="mt-6 flex-1 px-6">
             {homework.length === 0 ? (
-              <View className="items-center px-10 py-12">
-                <CircleOff size={32} color={colors.primary} />
-                <AppText semibold className="mt-5">
-                  No Homework found!
+              <View className="items-center py-12 rounded-xl"
+                style={{
+                  backgroundColor: colors.bgCard,
+                  borderWidth: 1,
+                  borderColor: colors.border,
+                }}>
+                <Blocks size={32} color={colors.statusAtext} />
+                <AppText bold muted className="mt-3">
+                  No homework found!
                 </AppText>
-                <AppText size="subtext" muted semibold className="text-center">
-                  All clear! No homework is assigned for the selected date.
+                <AppText size="subtext" muted>
+                  Try searching for different date!
                 </AppText>
               </View>
             ) : (

@@ -13,20 +13,20 @@ import {
   AlarmClock,
   BadgeCheck,
   Bell,
-  BookOpen,
   CalendarCheck,
   CalendarDays,
   ChevronRight,
   ClipboardCheck,
   FileText,
   GraduationCap,
-  Library,
+  IndianRupee,
   NotebookText,
   Sun,
   Sunrise,
   Sunset,
   User2,
   Users,
+  Video
 } from 'lucide-react-native';
 import { useEffect, useRef, useState } from 'react';
 import { Animated, Easing, TouchableOpacity, View } from 'react-native';
@@ -123,6 +123,7 @@ export default function EmployeeDashboard() {
       <Screen>
         <DashboardHeader
           schoolName={schoolUser.schoolName}
+          branchName={schoolUser.branchName}
           userName={schoolUser.name}
           onNotificationPress={() => router.push('/(employee)/notifications')}
         />
@@ -199,19 +200,9 @@ export default function EmployeeDashboard() {
           <Section title="Academic Portal">
             <PortalGrid>
               <PortalItem
-                icon={<Library size={24} color={colors.primary} />}
-                label="Online Class"
-                onPress={() => router.push('/(employee)/online-class')}
-              />
-              <PortalItem
-                icon={<GraduationCap size={24} color={colors.primary} />}
-                label="Exam Portal"
-                onPress={() => router.push('/(employee)/exams')}
-              />
-              <PortalItem
-                icon={<Users size={24} color={colors.primary} />}
-                label="Students"
-                onPress={() => router.push('/(employee)/students')}
+                icon={<IndianRupee size={24} color={colors.primary} />}
+                label="Salary"
+                onPress={() => router.push('/(employee)/salary')}
               />
               <PortalItem
                 icon={<AlarmClock size={24} color={colors.primary} />}
@@ -224,18 +215,28 @@ export default function EmployeeDashboard() {
                 onPress={() => router.push('/(employee)/timetable')}
               />
               <PortalItem
-                icon={<BadgeCheck size={24} color={colors.primary} />}
-                label="Assignment"
-                onPress={() => router.push('/(employee)/assignment')}
+                icon={<GraduationCap size={24} color={colors.primary} />}
+                label="Exam Portal"
+                onPress={() => router.push('/(employee)/exams')}
+              />
+              <PortalItem
+                icon={<Users size={24} color={colors.primary} />}
+                label="Students"
+                onPress={() => router.push('/(employee)/students')}
+              />
+              <PortalItem
+                icon={<Video size={24} color={colors.primary} />}
+                label="Online Class"
+                onPress={() => router.push('/(employee)/online-class')}
               />
             </PortalGrid>
           </Section>
           <Section title="Utilities">
             <PortalGrid>
               <PortalItem
-                icon={<BookOpen size={24} color={colors.primary} />}
-                label="Salary"
-                onPress={() => router.push('/(employee)/salary')}
+                icon={<BadgeCheck size={24} color={colors.primary} />}
+                label="Assignment"
+                onPress={() => router.push('/(employee)/assignment')}
               />
               <PortalItem
                 icon={<FileText size={24} color={colors.primary} />}
@@ -301,10 +302,12 @@ function getGreeting(): { text: string; Icon: LucideIcon } {
 
 export function DashboardHeader({
   schoolName,
+  branchName,
   userName,
   onNotificationPress,
 }: {
   schoolName: string;
+  branchName: string;
   userName: string;
   onNotificationPress: () => void;
 }) {
@@ -338,10 +341,18 @@ export function DashboardHeader({
 
   return (
     <View className="overflow-hidden">
-      <LinearGradient colors={[colors.primarySoft, colors.bg]} className="px-6 pb-6 pt-5">
-        <AppText size="label" bold className="text-center uppercase tracking-widest">
-          {schoolName}
-        </AppText>
+      <LinearGradient colors={[colors.primarySoft, colors.bg]} className="px-7 pb-6 pt-5">
+        <LinearGradient style={{ paddingVertical: 1, paddingHorizontal: 8, borderRadius: 5, alignSelf: 'center' }}
+          colors={[colors.bgCard + '00', colors.bgCard + '00']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}>
+          <AppText size="label" bold className="text-center uppercase">
+            {schoolName}
+          </AppText>
+          <AppText size="min" muted semibold className="text-center uppercase">
+            Branch: {branchName}
+          </AppText>
+        </LinearGradient>
         <View className="mt-5 flex-row items-start justify-between">
           <View className="flex-1">
             <AppText size="subtext" muted bold>

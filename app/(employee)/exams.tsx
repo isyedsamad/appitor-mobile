@@ -5,9 +5,10 @@ import { Screen } from '@/components/ui/Screen';
 import { useAuth } from '@/context/AuthContext';
 import { useTheme } from '@/context/ThemeContext';
 import { db } from '@/lib/firebase';
+import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import { collection, getDocs, orderBy, query, where } from 'firebase/firestore';
-import { CalendarRange, ClipboardList } from 'lucide-react-native';
+import { Blocks, CalendarRange, ClipboardList } from 'lucide-react-native';
 import { useEffect, useMemo, useState } from 'react';
 import { ScrollView, TouchableOpacity, View } from 'react-native';
 import Toast from 'react-native-toast-message';
@@ -128,14 +129,25 @@ export default function EmployeeExamsPage() {
           })}
         </ScrollView>
         <View className="mx-5 mt-4 flex-row gap-2">
-          <Stat label="Total Exams" value={counts.total} />
-          <Stat label="Active" value={counts.active} accent="primary" />
-          <Stat label="Upcoming" value={counts.upcoming} accent="warning" />
+          <Stat label="Total Exams" value={counts.total} bg={colors.statusLbg} text={colors.statusLtext} border={colors.statusLborder} />
+          <Stat label="Active" value={counts.active} accent="primary" bg={colors.statusPbg} text={colors.statusPtext} border={colors.statusPborder} />
+          <Stat label="Upcoming" value={counts.upcoming} accent="warning" bg={colors.statusAbg} text={colors.statusAtext} border={colors.statusAborder} />
         </View>
-        <View className="mt-4 px-5">
+        <View className="mt-3 px-5">
           {exams.length === 0 ? (
-            <View className="items-center py-20">
-              <AppText muted>No exams found for this session</AppText>
+            <View className="items-center py-12 rounded-xl"
+              style={{
+                backgroundColor: colors.bgCard,
+                borderWidth: 1,
+                borderColor: colors.border,
+              }}>
+              <Blocks size={32} color={colors.statusAtext} />
+              <AppText bold muted className="mt-3">
+                No exams found!
+              </AppText>
+              <AppText size="subtext" muted>
+                Try searching for different session!
+              </AppText>
             </View>
           ) : (
             exams.map((exam) => {
@@ -209,24 +221,25 @@ export default function EmployeeExamsPage() {
   );
 }
 
-function Stat({ label, value, accent }: any) {
+function Stat({ label, value, accent, bg, text, border }: any) {
   const { colors } = useTheme();
-  const color =
-    accent === 'primary' ? colors.primary : accent === 'warning' ? colors.statusLtext : colors.text;
   return (
-    <View
-      className="flex-1 rounded-xl px-4 py-3"
+    <LinearGradient
+      colors={[bg, bg + '22']}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 1, y: 1 }}
+      className="flex-1 px-4 py-3"
       style={{
-        backgroundColor: colors.bgCard,
+        borderRadius: 10,
         borderWidth: 1,
-        borderColor: colors.border,
+        borderColor: border,
       }}>
-      <AppText size="min" muted>
+      <AppText semibold size="min" muted>
         {label}
       </AppText>
-      <AppText size="title" semibold style={{ color }}>
+      <AppText size="title" semibold style={{ color: text }}>
         {value == 0 ? value : value.toString().padStart(2, '0')}
       </AppText>
-    </View>
+    </LinearGradient>
   );
 }

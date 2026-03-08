@@ -7,7 +7,7 @@ import { useTheme } from '@/context/ThemeContext';
 import { db } from '@/lib/firebase';
 import { router } from 'expo-router';
 import { doc, getDoc } from 'firebase/firestore';
-import { ChevronRightCircle, Search } from 'lucide-react-native';
+import { Blocks, ChevronRightCircle, Search } from 'lucide-react-native';
 import { useState } from 'react';
 import { FlatList, Modal, ScrollView, TouchableOpacity, View } from 'react-native';
 import Toast from 'react-native-toast-message';
@@ -38,7 +38,7 @@ export default function StudentsListPage() {
         'branches',
         schoolUser.currentBranch,
         'meta',
-        `${classId}_${sectionId}`
+        `${classId}_${sectionId}_${schoolUser.currentSession}`
       );
       const snap = await getDoc(ref);
       if (!snap.exists()) {
@@ -110,8 +110,19 @@ export default function StudentsListPage() {
               keyExtractor={(item) => item.uid}
               contentContainerStyle={{ gap: 10, paddingBottom: 30 }}
               ListEmptyComponent={
-                <View className="items-center py-20">
-                  <AppText muted>No students found</AppText>
+                <View className="items-center py-12 rounded-xl"
+                  style={{
+                    backgroundColor: colors.bgCard,
+                    borderWidth: 1,
+                    borderColor: colors.border,
+                  }}>
+                  <Blocks size={32} color={colors.statusAtext} />
+                  <AppText bold muted className="mt-3">
+                    Search Students
+                  </AppText>
+                  <AppText size="subtext" muted>
+                    Search students to view attendance
+                  </AppText>
                 </View>
               }
               renderItem={({ item }) => (
