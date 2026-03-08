@@ -1,13 +1,17 @@
 import { AppText } from "@/components/ui/AppText";
 import { useTheme } from "@/context/ThemeContext";
-import { View } from "react-native";
+import { useRouter } from "expo-router";
+import { Nfc } from "lucide-react-native";
+import { TouchableOpacity, View } from "react-native";
 
 export function TodayEmployeeAttendanceCard({
   statusKey,
   dateLabel,
+  showSmartPass = false,
 }: {
   statusKey: "P" | "A" | "L" | "H" | "O" | "M";
   dateLabel: string;
+  showSmartPass: boolean
 }) {
   const { colors } = useTheme();
 
@@ -57,6 +61,7 @@ export function TodayEmployeeAttendanceCard({
   };
 
   const status = statusMap[statusKey];
+  const router = useRouter();
 
   return (
     <View className="mt-6">
@@ -99,6 +104,22 @@ export function TodayEmployeeAttendanceCard({
           <InfoRow label="Marked By" value={statusKey != 'M' ? "Management" : '-'} />
           <InfoRow label="Remark" value={status.note} />
         </View>
+
+        {(statusKey === 'M' && showSmartPass) && (
+          <TouchableOpacity
+            onPress={() => router.push('/(employee)/mark-attendance')}
+            activeOpacity={0.8}
+            className="mt-4 flex-row items-center justify-center gap-2 py-3 rounded-xl border"
+            style={{
+              backgroundColor: colors.primarySoft,
+              borderColor: colors.primary,
+              borderStyle: 'dashed'
+            }}
+          >
+            <Nfc size={18} color={colors.primary} />
+            <AppText bold primary>SmartPass: Tap to Mark</AppText>
+          </TouchableOpacity>
+        )}
       </View>
     </View>
   );

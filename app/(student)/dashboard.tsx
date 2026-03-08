@@ -176,7 +176,7 @@ export default function StudentDashboard() {
             />
           </View>
 
-          <TodayEmployeeAttendanceCard statusKey={statusKey} dateLabel={dateLabel} />
+          <TodayEmployeeAttendanceCard statusKey={statusKey} dateLabel={dateLabel} showSmartPass={false} />
 
           <View className="mt-6 flex-row gap-4">
             <BigAction

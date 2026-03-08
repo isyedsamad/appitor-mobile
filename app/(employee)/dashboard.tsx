@@ -178,7 +178,7 @@ export default function EmployeeDashboard() {
             />
           </View>
 
-          <TodayEmployeeAttendanceCard statusKey={statusKey} dateLabel={dateLabel} />
+          <TodayEmployeeAttendanceCard statusKey={statusKey} dateLabel={dateLabel} showSmartPass={true} />
 
           <View className="mt-6 flex-row gap-4">
             <BigAction
